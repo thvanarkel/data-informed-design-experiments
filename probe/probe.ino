@@ -59,7 +59,7 @@ void loop()
     connect();
   }
 
-  if (millis() - lastMillis > 1000) {
+  if (millis() - lastMillis > 2000) {
     lastMillis = millis();
   } else {
     return;
@@ -73,9 +73,18 @@ void loop()
   #endif
 
   #ifdef SOUND
-  int soundValue = analogRead(SOUND_PIN);
-  client.publish("/sound", String(soundValue));
-  Serial.println(soundValue);
+  unsigned long startTime = millis();
+  const int sampleTime = 100;
+  unsigned long total = 0;
+  int numMeasurements = 0;
+  while (millis() - startTime < sampleTime) {
+    int sensorValue = analogRead(SOUND_PIN);
+    total += sensorValue;
+    numMeasurements++;
+  }
+  int sensorAverage = total / numMeasurements;
+  client.publish("/sound", String((sensorAverage+83.2073) / 11.003));
+  Serial.println((sensorAverage+83.2073) / 11.003);
   #endif
  
 }
