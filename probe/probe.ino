@@ -21,9 +21,9 @@
 //WiFiClient net;
 //MQTTClient client;
 
-BLEService lightService("7A9B4B66-362f-11EA-978F-2E728CE88125");
+BLEService lightService("7a9b4b66-362f-11ea-978f-2e728ce88125");
 
-BLEIntCharacteristic lightLevelChar("7A9B4B66-362f-11EA-978F-2E728CE88125", BLERead | BLENotify);
+BLEIntCharacteristic lightLevelChar("7a9b4b66-362f-11ea-978f-2e728ce88125", BLERead | BLENotify);
 
 int oldLightLevel = 0;
 long previousMillis = 0;
@@ -85,14 +85,17 @@ void loop()
   if(central) {
     Serial.println("Connected to central: ");
     Serial.println(central.address());
+    while(central.connected()) {
+      if (millis() - previousMillis >= 1000) {
+        previousMillis = millis();
+        updateLightValue();
+      }
+    }
+    Serial.print("Disconnected from central: ");
+    Serial.println(central.address());
   }
 
-  while(central.connected()) {
-    if (millis() - previousMillis >= 1000) {
-      previousMillis = millis();
-      updateLightValue();
-    }
-  }
+  
 //  client.loop();
 //  delay(10);  // <- fixes some issues with WiFi stability
 //  if (!client.connected()) {
