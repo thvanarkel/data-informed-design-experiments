@@ -1,69 +1,109 @@
-#include <Wire.h>
-#include <Digital_Light_ISL29035.h>
-#include <Digital_Light_TSL2561.h>
+//#include <Wire.h>
+//#include <Digital_Light_ISL29035.h>
+//#include <Digital_Light_TSL2561.h>
 
-#include <WiFiNINA.h>
-#include <MQTTClient.h>
+#include <ArduinoBLE.h>
 
-#include "arduino_secrets.h"
+//#include <WiFiNINA.h>
+//#include <MQTTClient.h>
+
+//#include "arduino_secrets.h"
 
 // CONFIGURATION
-#define DIGITAL_LIGHT
-#define SOUND
-  #define SOUND_PIN A0
+//#define DIGITAL_LIGHT
+//#define SOUND
+//  #define SOUND_PIN A0
 
-char ssid[] = SECRET_SSID;
-char pass[] = SECRET_PASS;
+//char ssid[] = SECRET_SSID;
+//char pass[] = SECRET_PASS;
 
 // Variables
-WiFiClient net;
-MQTTClient client;
+//WiFiClient net;
+//MQTTClient client;
+
+BLEService lightService("7A9B4B66-362f-11EA-978F-2E728CE88125");
+
+BLEIntCharacteristic lightLevelChar("7A9B4B66-362f-11EA-978F-2E728CE88125", BLERead | BLENotify);
+
+int oldLightLevel = 0;
+long previousMillis = 0;
 
 unsigned long lastMillis = 0;
 
 
 void setup()
 {
-  Wire.begin();
+  
+//  Wire.begin();
   Serial.begin(9600);
-  WiFi.begin(ssid, pass);
-  TSL2561.init();
+  while(!Serial);
+  Serial.println("begin");
+//  WiFi.begin(ssid, pass);
+//  TSL2561.init();
 
-  client.begin("broker.shiftr.io", net);
-
-  connect();
-}
-
-void connect() {
-  Serial.println("checking wifi...");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(1000);
-  }
-  Serial.print("\nconnecting...");
-  while (!client.connect("probe", SECRET_USERNAME, SECRET_PASSWORD)) {
-    Serial.print(".");
-    delay(1000);
+  if(!BLE.begin()) {
+    Serial.println("Cannot start BLE");
+    while(1);
   }
 
-  Serial.println("\nconnected!");
+  BLE.setLocalName("LightSensor");
+  BLE.setAdvertisedService(lightService);
+  lightService.addCharacteristic(lightLevelChar);
+  BLE.addService(lightService);
+  lightLevelChar.writeValue(oldLightLevel);
 
-  client.subscribe("/hello");
+  BLE.advertise();
+
+  Serial.println("Bluetooth device active, waiting for connections");
+
+//  client.begin("broker.shiftr.io", net);
+
+//  connect();
 }
+
+//void connect() {
+//  Serial.println("checking wifi...");
+//  while (WiFi.status() != WL_CONNECTED) {
+//    Serial.print(".");
+//    delay(1000);
+//  }
+//  Serial.print("\nconnecting...");
+//  while (!client.connect("probe", SECRET_USERNAME, SECRET_PASSWORD)) {
+//    Serial.print(".");
+//    delay(1000);
+//  }
+//
+//  Serial.println("\nconnected!");
+//
+//  client.subscribe("/hello");
+//}
 
 void loop()
 {
-  client.loop();
-  delay(10);  // <- fixes some issues with WiFi stability
-  if (!client.connected()) {
-    connect();
+  BLEDevice central = BLE.central();
+
+  if(central) {
+    Serial.println("Connected to central: ");
+    Serial.println(central.address());
   }
 
-  if (millis() - lastMillis > 2000) {
-    lastMillis = millis();
-  } else {
-    return;
+  while(central.connected()) {
+    if (millis() - previousMillis >= 1000) {
+      previousMillis = millis();
+      updateLightValue();
+    }
   }
+//  client.loop();
+//  delay(10);  // <- fixes some issues with WiFi stability
+//  if (!client.connected()) {
+//    connect();
+//  }
+
+//  if (millis() - lastMillis > 2000) {
+//    lastMillis = millis();
+//  } else {
+//    return;
+//  }
   
   #ifdef DIGITAL_LIGHT
   Serial.print("The Light value is: ");
@@ -87,4 +127,14 @@ void loop()
   Serial.println((sensorAverage+83.2073) / 11.003);
   #endif
  
+}
+
+void updateLightValue() {
+  int lightLevel = random(1023);//TSL2561.readVisibleLux();
+  if (lightLevel != oldLightLevel) {
+    Serial.print("Light level is: ");
+    Serial.println(lightLevel);
+    lightLevelChar.writeValue(lightLevel);
+    oldLightLevel = lightLevel;
+  }
 }
