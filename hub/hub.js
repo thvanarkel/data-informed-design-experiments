@@ -1,14 +1,15 @@
-const http = require('http');
+var noble = require('@abandonware/noble');
 
-const hostname = '127.0.0.1';
-const port = 3000;
-
-const server = http.createServer((req, res) => {
-	res.statusCode = 200;
-	res.setHeader('Content-Type', 'text/plain');
-	res.end('Hello World');
+noble.on('stateChange', function(state) {
+  if (state === 'poweredOn') {
+    noble.startScanning();
+  } else {
+    noble.stopScanning();
+  }
 });
 
-server.listen(port, hostname, () => {
-	console.log(`Server running at http://${hostname}:${port}/`);
+noble.on('discover', function(peripheral) {
+	console.log('Found device with local name: ' + peripheral.advertisement.localName);
+	console.log('advertising the following service uuid\s: ' + peripheral.advertisement.serviceUuids);
+	console.log();
 });
