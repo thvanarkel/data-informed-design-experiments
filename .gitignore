@@ -2,3 +2,4 @@
 probe/secrets.ino
 probe/arduino_secrets.h
 hub/arduino_secrets.h
+hub/node_modules
