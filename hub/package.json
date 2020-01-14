@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@abandonware/noble": "^1.9.2-5",
+    "noble-mac": "https://github.com/Timeular/noble-mac.git",
     "async": "^3.1.0"
   }
 }

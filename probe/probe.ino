@@ -46,7 +46,7 @@ void setup()
     while(1);
   }
 
-  BLE.setLocalName("LightSensor");
+  BLE.setLocalName("LED");
   BLE.setAdvertisedService(lightService);
   lightService.addCharacteristic(lightLevelChar);
   BLE.addService(lightService);
