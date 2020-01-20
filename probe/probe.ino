@@ -1,6 +1,6 @@
-//#include <Wire.h>
+#include <Wire.h>
 //#include <Digital_Light_ISL29035.h>
-//#include <Digital_Light_TSL2561.h>
+#include <Digital_Light_TSL2561.h>
 
 #include <ArduinoBLE.h>
 
@@ -34,12 +34,12 @@ unsigned long lastMillis = 0;
 void setup()
 {
   
-//  Wire.begin();
+
   Serial.begin(9600);
   while(!Serial);
   Serial.println("begin");
 //  WiFi.begin(ssid, pass);
-//  TSL2561.init();
+
 
   if(!BLE.begin()) {
     Serial.println("Cannot start BLE");
@@ -55,6 +55,9 @@ void setup()
   BLE.advertise();
 
   Serial.println("Bluetooth device active, waiting for connections");
+
+  Wire.begin();
+  TSL2561.init();
 
 //  client.begin("broker.shiftr.io", net);
 
@@ -86,13 +89,18 @@ void loop()
     Serial.println("Connected to central: ");
     Serial.println(central.address());
     while(central.connected()) {
-      if (millis() - previousMillis >= 1000) {
+      if (millis() >= previousMillis + 1000) {
         previousMillis = millis();
         updateLightValue();
       }
     }
     Serial.print("Disconnected from central: ");
     Serial.println(central.address());
+  }
+
+  if (millis() >= previousMillis + 1000) {
+     previousMillis = millis();
+     updateLightValue();
   }
 
   
@@ -133,7 +141,7 @@ void loop()
 }
 
 void updateLightValue() {
-  int lightLevel = random(1023);//TSL2561.readVisibleLux();
+  int lightLevel = TSL2561.readVisibleLux();
   if (lightLevel != oldLightLevel) {
     Serial.print("Light level is: ");
     Serial.println(lightLevel);
