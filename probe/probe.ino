@@ -1,18 +1,29 @@
 #include <Wire.h>
 #include <Digital_Light_TSL2561.h>
 
-#include <ArduinoBLE.h>
+//#include <ArduinoBLE.h>
+#include <WiFiNINA.h>
+#include <MQTT.h>
+
+#include "arduino_secrets.h"
+
+const char ssid[] = SECRET_SSID;
+const char pass[] = SECRET_PASS;
+
+WiFiClient net;
+MQTTClient client;
 
 // CONFIGURATION
-//#define DIGITAL_LIGHT
+#define DIGITAL_LIGHT
 //#define SOUND
 //  #define SOUND_PIN A0
 
-BLEService lightService("7a9b4b66-362f-11ea-978f-2e728ce88125");
 
-BLEIntCharacteristic lightLevelChar("7a9b4b66-362f-11ea-978f-2e728ce88125", BLERead | BLENotify);
-
+#ifdef DIGITAL_LIGHT
 int oldLightLevel = 0;
+#endif
+
+
 long previousMillis = 0;
 
 unsigned long lastMillis = 0;
@@ -20,55 +31,56 @@ unsigned long lastMillis = 0;
 void setup()
 {
   Serial.begin(9600);
-  while(!Serial);
+//  while(!Serial);
   Serial.println("begin");
+  WiFi.begin(ssid, pass);
+  
+  client.begin("192.168.4.10", net);
+  client.onMessage(messageReceived);
 
-  if(!BLE.begin()) {
-    Serial.println("Cannot start BLE");
-    while(1);
-  }
-
-  BLE.setLocalName("LED");
-  BLE.setAdvertisedService(lightService);
-  lightService.addCharacteristic(lightLevelChar);
-  BLE.addService(lightService);
-  lightLevelChar.writeValue(oldLightLevel);
-
-  BLE.advertise();
-
-  Serial.println("Bluetooth device active, waiting for connections");
+  connect();
 
   Wire.begin();
   TSL2561.init();
 }
 
-void loop()
-{
-  BLEDevice central = BLE.central();
-
-  if(central) {
-    Serial.println("Connected to central: ");
-    Serial.println(central.address());
-    while(central.connected()) {
-      if (millis() >= previousMillis + 1000) {
-        previousMillis = millis();
-        updateLightValue();
-      }
+void connect() {
+  Serial.print("checking wifi...");
+  int ticks;
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    ticks++;
+    delay(1000);
+    if(ticks > 5) {
+      WiFi.begin(ssid, pass);
+      ticks = 0;
     }
-    Serial.print("Disconnected from central: ");
-    Serial.println(central.address());
   }
 
-  if (millis() >= previousMillis + 1000) {
-     previousMillis = millis();
-     updateLightValue();
+  Serial.print("\nconnecting...");
+  while (!client.connect("arduino", SECRET_USERNAME, SECRET_PASSWORD)) {
+    Serial.print(".");
+    delay(1000);
+  }
+
+  Serial.println("\nconnected!");
+
+  client.subscribe("/hello");
+  // client.unsubscribe("/hello");
+}
+
+void loop()
+{
+  client.loop();
+
+  if (!client.connected()) {
+    connect();
   }
   
   #ifdef DIGITAL_LIGHT
-  Serial.print("The Light value is: ");
-  int lightValue = TSL2561.readVisibleLux();
-  Serial.println(lightValue);
-  client.publish("/light", String(lightValue));
+  if (millis() > lastMillis + 1000) {
+    updateLightValue(); 
+  }
   #endif
 
   #ifdef SOUND
@@ -88,12 +100,18 @@ void loop()
  
 }
 
+void messageReceived(String &topic, String &payload) {
+  Serial.println("incoming: " + topic + " - " + payload);
+}
+
+#ifdef DIGITAL_LIGHT
 void updateLightValue() {
   int lightLevel = TSL2561.readVisibleLux();
   if (lightLevel != oldLightLevel) {
     Serial.print("Light level is: ");
     Serial.println(lightLevel);
-    lightLevelChar.writeValue(lightLevel);
+    client.publish("/light", String(lightLevel));
     oldLightLevel = lightLevel;
   }
 }
+#endif
