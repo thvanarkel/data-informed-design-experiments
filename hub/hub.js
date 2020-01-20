@@ -1,8 +1,13 @@
-var noble = require('noble-mac');
+var noble = require('@abandonware/noble');
+
+console.log("Started")
+console.log("Nothing showing up? Run the program as 'sudo node hub.js'");
 
 noble.on('stateChange', function(state) {
+  console.log(state);
   if (state === 'poweredOn') {
-    noble.startScanning(["7a9b4b66-362f-11ea-978f-2e728ce88125"]);
+	console.log("scanning...");
+    noble.startScanning();
   } else {
     noble.stopScanning();
   }
@@ -25,14 +30,6 @@ noble.on('discover', function(peripheral) {
     for (var i in serviceData) {
       console.log('\t\t' + JSON.stringify(serviceData[i].uuid) + ': ' + JSON.stringify(serviceData[i].data.toString('hex')));
     }
-  }
-  if (peripheral.advertisement.manufacturerData) {
-    console.log('\there is my manufacturer data:');
-    console.log('\t\t' + JSON.stringify(peripheral.advertisement.manufacturerData.toString('hex')));
-  }
-  if (peripheral.advertisement.txPowerLevel !== undefined) {
-    console.log('\tmy TX power level is:');
-    console.log('\t\t' + peripheral.advertisement.txPowerLevel);
   }
 
   console.log();
