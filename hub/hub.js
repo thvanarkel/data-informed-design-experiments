@@ -1,36 +1,58 @@
-var noble = require('@abandonware/noble');
+// var mqtt = require('mqtt')  
+// var mongodb = require('mongodb');
+// var mongodbClient = mongodb.MongoClient;
+// var mongodbURI = 'mongodb://localhost:27017';
+// 
+// // Database Name
+// const dbName = 'sensor-data';
+// 
+// mongodbClient.connect(mongodbURI, { useUnifiedTopology: true }, setupCollection);
+// 
+// function setupCollection(err,client) {  
+//   if(err) throw err;
+//   const db = client.db(dbName);
+//   client = mqtt.createClient(1883,'localhost')
+//   client.subscribe("#")
+//   client.on('message', insertEvent);
+// }
+// 
+// function insertEvent(topic,payload) {
+//   console.log(topic + ", " + event);
+// }
 
-console.log("Started")
-console.log("Nothing showing up? Run the program as 'sudo node hub.js'");
+const MongoClient = require('mongodb').MongoClient;
+const mqtt = require('mqtt')
 
-noble.on('stateChange', function(state) {
-  console.log(state);
-  if (state === 'poweredOn') {
-	console.log("scanning...");
-    noble.startScanning();
-  } else {
-    noble.stopScanning();
-  }
+// Connection URL
+const url = 'mongodb://localhost:27017';
+
+// Database Name
+const dbName = 'sensor-data';
+
+var collection, client;
+
+// Use connect method to connect to the server
+MongoClient.connect(url, { useUnifiedTopology: true }, function(err, c) {
+  console.log("Connected successfully to server");
+
+  const db = c.db(dbName);
+  collection = db.collection(dbName);
+  client = mqtt.connect({ host:'localhost', port:1883 });
+  client.subscribe('#');
+  client.on('message', insertEvent);
 });
 
-noble.on('discover', function(peripheral) {
-  peripheral.connect();
-  console.log('peripheral discovered (' + peripheral.id +
-              ' with address <' + peripheral.address +  ', ' + peripheral.addressType + '>,' +
-              ' connectable ' + peripheral.connectable + ',' +
-              ' RSSI ' + peripheral.rssi + ':');
-  console.log('\thello my local name is:');
-  console.log('\t\t' + peripheral.advertisement.localName);
-  console.log('\tcan I interest you in any of the following advertised services:');
-  console.log('\t\t' + JSON.stringify(peripheral.advertisement.serviceUuids));
-
-  var serviceData = peripheral.advertisement.serviceData;
-  if (serviceData && serviceData.length) {
-    console.log('\there is my service data:');
-    for (var i in serviceData) {
-      console.log('\t\t' + JSON.stringify(serviceData[i].uuid) + ': ' + JSON.stringify(serviceData[i].data.toString('hex')));
+const insertEvent = function(topic, payload) {
+  // Get the documents collection
+  // const collection = db.collection('documents');
+  console.log(topic + ", " + payload);
+  // Insert some documents
+  collection.updateOne(
+    { _id: "arduino" },
+    { $push: { events: { event: { value:payload, when:new Date() } } } },
+    { upsert: true },
+    function(err,docs) {
+      if(err) { console.log("Insert fail"); } // Improve error handling
     }
-  }
-
-  console.log();
-});
+  );
+}
