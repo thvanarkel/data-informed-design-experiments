@@ -35,7 +35,7 @@ void setup()
   Serial.println("begin");
   WiFi.begin(ssid, pass);
   
-  client.begin("192.168.4.10", net);
+  client.begin("192.168.1.22", net);
   client.onMessage(messageReceived);
 
   connect();
@@ -79,6 +79,7 @@ void loop()
   
   #ifdef DIGITAL_LIGHT
   if (millis() > lastMillis + 1000) {
+    lastMillis = millis();
     updateLightValue(); 
   }
   #endif
