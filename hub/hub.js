@@ -31,6 +31,26 @@ const dbName = 'sensor-data';
 
 var collection, client;
 
+//@attention iot-raspberrypi is the IoT platform service name in this example, you should replace it with yours
+var iotPlatformServiceName = 'data-informed-design';
+
+// IBM IoT service
+var Client = require('ibmiotf');
+var secret = require('secret.js');
+
+
+
+var deviceClient = new Client.IotfDevice(config);
+
+deviceClient.connect();
+ 
+deviceClient.on('connect', function () {
+  console.log("Successfully connected to our IoT service!");
+//Add your code here
+});
+
+
+
 // Use connect method to connect to the server
 MongoClient.connect(url, { useUnifiedTopology: true }, function(err, c) {
   console.log("Connected successfully to server");
@@ -46,6 +66,7 @@ const insertEvent = function(topic, payload) {
   // Get the documents collection
   // const collection = db.collection('documents');
   console.log(topic + ", " + payload);
+  deviceClient.publish("state","json",'{"d" : { "cpu" : 60, "mem" : 50 }}');
   // Insert some documents
   collection.updateOne(
     { _id: "arduino" },
