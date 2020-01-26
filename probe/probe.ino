@@ -1,7 +1,6 @@
 #include <Wire.h>
 #include <Digital_Light_TSL2561.h>
-
-//#include <ArduinoBLE.h>
+#include <Reactduino.h>
 #include <WiFiNINA.h>
 #include <MQTT.h>
 
@@ -28,11 +27,64 @@ long previousMillis = 0;
 
 unsigned long lastMillis = 0;
 
-void setup()
-{
+
+
+
+
+//void loop()
+//{
+//  
+//  
+//  #ifdef DIGITAL_LIGHT
+//  if (millis() > lastMillis + 1000) {
+//    lastMillis = millis();
+//    updateLightValue(); 
+//  }
+//  #endif
+//
+//  #ifdef SOUND
+//  unsigned long startTime = millis();
+//  const int sampleTime = 100;
+//  unsigned long total = 0;
+//  int numMeasurements = 0;
+//  while (millis() - startTime < sampleTime) {
+//    int sensorValue = analogRead(SOUND_PIN);
+//    total += sensorValue;
+//    numMeasurements++;
+//  }
+//  int sensorAverage = total / numMeasurements;
+//  client.publish("/sound", String((sensorAverage+83.2073) / 11.003));
+//  Serial.println((sensorAverage+83.2073) / 11.003);
+//  #endif
+// 
+//}
+
+void messageReceived(String &topic, String &payload) {
+  Serial.println("incoming: " + topic + " - " + payload);
+}
+
+#ifdef DIGITAL_LIGHT
+void sampleLight() {
+  int lightLevel = TSL2561.readVisibleLux();
+//  if (lightLevel != oldLightLevel) {
+    Serial.print("Light level is: ");
+    Serial.println(lightLevel);
+    client.publish("/light", String(lightLevel));
+    oldLightLevel = lightLevel;
+//  }
+}
+#endif
+
+void loop_main() {
+  client.loop();
+
+  if (!client.connected()) {
+    connect();
+  }
+}
+
+void app_main() {
   Serial.begin(9600);
-//  while(!Serial);
-  Serial.println("begin");
   WiFi.begin(ssid, pass);
   
   client.begin("192.168.1.22", net);
@@ -42,7 +94,14 @@ void setup()
 
   Wire.begin();
   TSL2561.init();
+
+  #ifdef DIGITAL_LIGHT
+  app.repeat(1000, sampleLight);
+  #endif
+  app.onTick(loop_main);
 }
+
+Reactduino app(app_main);
 
 void connect() {
   Serial.print("checking wifi...");
@@ -68,51 +127,3 @@ void connect() {
   client.subscribe("/hello");
   // client.unsubscribe("/hello");
 }
-
-void loop()
-{
-  client.loop();
-
-  if (!client.connected()) {
-    connect();
-  }
-  
-  #ifdef DIGITAL_LIGHT
-  if (millis() > lastMillis + 1000) {
-    lastMillis = millis();
-    updateLightValue(); 
-  }
-  #endif
-
-  #ifdef SOUND
-  unsigned long startTime = millis();
-  const int sampleTime = 100;
-  unsigned long total = 0;
-  int numMeasurements = 0;
-  while (millis() - startTime < sampleTime) {
-    int sensorValue = analogRead(SOUND_PIN);
-    total += sensorValue;
-    numMeasurements++;
-  }
-  int sensorAverage = total / numMeasurements;
-  client.publish("/sound", String((sensorAverage+83.2073) / 11.003));
-  Serial.println((sensorAverage+83.2073) / 11.003);
-  #endif
- 
-}
-
-void messageReceived(String &topic, String &payload) {
-  Serial.println("incoming: " + topic + " - " + payload);
-}
-
-#ifdef DIGITAL_LIGHT
-void updateLightValue() {
-  int lightLevel = TSL2561.readVisibleLux();
-  if (lightLevel != oldLightLevel) {
-    Serial.print("Light level is: ");
-    Serial.println(lightLevel);
-    client.publish("/light", String(lightLevel));
-    oldLightLevel = lightLevel;
-  }
-}
-#endif
