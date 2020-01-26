@@ -16,6 +16,8 @@ MQTTClient client;
 // CONFIGURATION
 #define DIGITAL_LIGHT
 #define MICROPHONE
+#define MOTION
+  #define MOTION_PIN 5
 
 #ifdef DIGITAL_LIGHT
 int oldLightLevel = 0;
@@ -97,6 +99,13 @@ int sample() {
 }
 #endif
 
+#ifdef MOTION
+void sampleMotion() {
+  int val = digitalRead(MOTION_PIN);
+  client.publish("/motion", String(val));
+}
+#endif
+
 void loop_main() {
   client.loop();
 
@@ -114,7 +123,7 @@ void app_main() {
   #ifdef DIGITAL_LIGHT
   Wire.begin();
   TSL2561.init();
-  app.repeat(1000, sampleLight);
+  app.repeat(30000, sampleLight);
   #endif
   
   #ifdef MICROPHONE
@@ -123,6 +132,10 @@ void app_main() {
     while (1); // do nothing
   }
   app.repeat(1000, sampleSound);
+  #endif
+
+  #ifdef MOTION
+  app.repeat(10000, sampleMotion);
   #endif
   
   app.onTick(loop_main);
