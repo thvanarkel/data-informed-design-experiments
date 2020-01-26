@@ -3,6 +3,7 @@
 #include <Reactduino.h>
 #include <WiFiNINA.h>
 #include <MQTT.h>
+#include <I2S.h>
 
 #include "arduino_secrets.h"
 
@@ -14,56 +15,11 @@ MQTTClient client;
 
 // CONFIGURATION
 #define DIGITAL_LIGHT
-//#define SOUND
-//  #define SOUND_PIN A0
-
+#define MICROPHONE
 
 #ifdef DIGITAL_LIGHT
 int oldLightLevel = 0;
-#endif
 
-
-long previousMillis = 0;
-
-unsigned long lastMillis = 0;
-
-
-
-
-
-//void loop()
-//{
-//  
-//  
-//  #ifdef DIGITAL_LIGHT
-//  if (millis() > lastMillis + 1000) {
-//    lastMillis = millis();
-//    updateLightValue(); 
-//  }
-//  #endif
-//
-//  #ifdef SOUND
-//  unsigned long startTime = millis();
-//  const int sampleTime = 100;
-//  unsigned long total = 0;
-//  int numMeasurements = 0;
-//  while (millis() - startTime < sampleTime) {
-//    int sensorValue = analogRead(SOUND_PIN);
-//    total += sensorValue;
-//    numMeasurements++;
-//  }
-//  int sensorAverage = total / numMeasurements;
-//  client.publish("/sound", String((sensorAverage+83.2073) / 11.003));
-//  Serial.println((sensorAverage+83.2073) / 11.003);
-//  #endif
-// 
-//}
-
-void messageReceived(String &topic, String &payload) {
-  Serial.println("incoming: " + topic + " - " + payload);
-}
-
-#ifdef DIGITAL_LIGHT
 void sampleLight() {
   int lightLevel = TSL2561.readVisibleLux();
 //  if (lightLevel != oldLightLevel) {
@@ -72,6 +28,72 @@ void sampleLight() {
     client.publish("/light", String(lightLevel));
     oldLightLevel = lightLevel;
 //  }
+}
+#endif
+
+#ifdef MICROPHONE
+struct SoundSample {
+  int minimum;
+  int maximum;
+  int average;
+};
+
+void sampleSound() {
+  unsigned long lastMillis = millis();
+  SoundSample theSample;
+  long total = 0;
+  long measurements = 0;
+  while (millis() - lastMillis < 500) {
+    int delta = sample();
+    theSample.minimum = min(theSample.minimum, delta);
+    theSample.maximum = max(theSample.maximum, delta);
+    total += delta;
+    measurements++;
+  }
+  theSample.average = total/measurements;
+  client.publish("/sound/minimum", String(theSample.minimum));
+  client.publish("/sound/maximum", String(theSample.maximum));
+  client.publish("/sound/average", String(theSample.average));
+}
+
+#define SAMPLES 128 // make it a power of two for best DMA performance
+
+int sample() {
+  // read a bunch of samples:
+  int samples[SAMPLES];
+ 
+  for (int i=0; i<SAMPLES; i++) {
+    int sample = 0; 
+    while ((sample == 0) || (sample == -1) ) {
+      sample = I2S.read();
+    }
+    // convert to 18 bit signed
+    sample >>= 14; 
+    samples[i] = sample;
+  }
+ 
+  // ok we have the samples, get the mean (avg)
+  float meanval = 0;
+  for (int i=0; i<SAMPLES; i++) {
+    meanval += samples[i];
+  }
+  meanval /= SAMPLES;
+  
+  // subtract it from all sapmles to get a 'normalized' output
+  for (int i=0; i<SAMPLES; i++) {
+    samples[i] -= meanval;
+  }
+  // find the 'peak to peak' max
+  float maxsample, minsample;
+  minsample = 100000;
+  maxsample = -100000;
+  for (int i=0; i<SAMPLES; i++) {
+    minsample = min(minsample, samples[i]);
+    maxsample = max(maxsample, samples[i]);
+  }
+//  Serial.print(maxsample - minsample);
+//  Serial.print(" ");
+  return (maxsample - minsample);
 }
 #endif
 
@@ -86,18 +108,23 @@ void loop_main() {
 void app_main() {
   Serial.begin(9600);
   WiFi.begin(ssid, pass);
-  
-  client.begin("192.168.1.22", net);
-  client.onMessage(messageReceived);
-
+  client.begin("broker.shiftr.io", net);
   connect();
 
+  #ifdef DIGITAL_LIGHT
   Wire.begin();
   TSL2561.init();
-
-  #ifdef DIGITAL_LIGHT
   app.repeat(1000, sampleLight);
   #endif
+  
+  #ifdef MICROPHONE
+  if (!I2S.begin(I2S_PHILIPS_MODE, 16000, 32)) {
+    Serial.println("Failed to initialize I2S!");
+    while (1); // do nothing
+  }
+  app.repeat(1000, sampleSound);
+  #endif
+  
   app.onTick(loop_main);
 }
 
