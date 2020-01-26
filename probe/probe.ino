@@ -14,6 +14,8 @@ WiFiClient net;
 MQTTClient client;
 
 // CONFIGURATION
+#define THING_NAME "Bed"
+
 #define DIGITAL_LIGHT
 #define MICROPHONE
 #define MOTION
@@ -157,7 +159,7 @@ void connect() {
   }
 
   Serial.print("\nconnecting...");
-  while (!client.connect("arduino", SECRET_USERNAME, SECRET_PASSWORD)) {
+  while (!client.connect(THING_NAME, SECRET_USERNAME, SECRET_PASSWORD)) {
     Serial.print(".");
     delay(1000);
   }
