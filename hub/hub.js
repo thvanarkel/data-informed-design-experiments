@@ -32,22 +32,22 @@ const dbName = 'sensor-data';
 var collection, client;
 
 //@attention iot-raspberrypi is the IoT platform service name in this example, you should replace it with yours
-var iotPlatformServiceName = 'data-informed-design';
+// var iotPlatformServiceName = 'data-informed-design';
 
 // IBM IoT service
-var Client = require('ibmiotf');
+// var Client = require('ibmiotf');
 var secret = require('secret.js');
 
 
 
-var deviceClient = new Client.IotfDevice(config);
+// var deviceClient = new Client.IotfDevice(config);
 
-deviceClient.connect();
+// deviceClient.connect();
  
-deviceClient.on('connect', function () {
-  console.log("Successfully connected to our IoT service!");
-//Add your code here
-});
+// deviceClient.on('connect', function () {
+//   console.log("Successfully connected to our IoT service!");
+// //Add your code here
+// });
 
 
 
@@ -57,7 +57,7 @@ MongoClient.connect(url, { useUnifiedTopology: true }, function(err, c) {
 
   const db = c.db(dbName);
   collection = db.collection(dbName);
-  client = mqtt.connect({ host:'localhost', port:1883 });
+  client = mqtt.connect({ host:'broker.shiftr.io', port:1883, password:password, username:username });
   client.subscribe('#');
   client.on('message', insertEvent);
 });
@@ -66,11 +66,11 @@ const insertEvent = function(topic, payload) {
   // Get the documents collection
   // const collection = db.collection('documents');
   console.log(topic + ", " + payload);
-  deviceClient.publish("state","json",'{"d" : { "cpu" : 60, "mem" : 50 }}');
+  // deviceClient.publish("state","json",'{"d" : { "cpu" : 60, "mem" : 50 }}');
   // Insert some documents
   collection.updateOne(
-    { _id: "arduino" },
-    { $push: { events: { event: { value:payload, when:new Date() } } } },
+    { _id: topic },
+    { $push: { events: { event: { value:parseInt(payload), when:new Date() } } } },
     { upsert: true },
     function(err,docs) {
       if(err) { console.log("Insert fail"); } // Improve error handling

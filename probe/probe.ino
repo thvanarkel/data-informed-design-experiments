@@ -14,7 +14,7 @@ WiFiClient net;
 MQTTClient client;
 
 // CONFIGURATION
-#define THING_NAME "Bed"
+#define THING_NAME "bed"
 
 #define DIGITAL_LIGHT
 #define MICROPHONE
