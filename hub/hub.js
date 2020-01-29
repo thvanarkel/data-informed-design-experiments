@@ -3,6 +3,7 @@ const dotenv = require('dotenv').config()
 const path = require('path')
 const fs = require('fs')
 const csv = require('fast-csv')
+var async = require('async')
 
 const directory = process.env['HOME'] + '/sensor-data';
 
@@ -14,12 +15,15 @@ class Thing {
             .on('finish', () => res());
     });
   }
+  
+
 
   constructor(opts) {
     this.headers = opts.headers;
     this.path = opts.path;
     this.writeOpts = { headers: this.headers, includeEndRowDelimiter: true, rowDelimiter:"\n", quoteColumns: true };
     this.name = opts.name;
+    this.events = [];
     this.created = fs.existsSync(opts.path)
   }
 
@@ -45,6 +49,34 @@ class Thing {
         });
     });
   }
+  
+  async push() {
+    await Thing.write(fs.createWriteStream(this.path, { flags: 'a' }), this.events, {
+        ...this.writeOpts,
+        writeHeaders: false,
+    });
+    console.log("pushed " + this.events.length + " events");
+    this.events = [];
+  }
+  
+  addEvent(event) {
+    if (!this.created) {
+      this.create([
+        { timestamp: event.timestamp, stream: event.stream, value: event.value }
+      ])
+    } else {
+      this.events.push(event);
+
+    }
+  }
+}
+
+class Event {
+  constructor(timestamp, stream, value) {
+    this.timestamp = timestamp;
+    this.stream = stream;
+    this.value = value;
+  }
 }
 
 var things = [];
@@ -56,6 +88,9 @@ const connect = function () {
 }
 
 const insertEvent = function(topic, payload) {
+  // Create Event
+  const event = new Event(new Date(), topic, payload);
+  
   const els = topic.split('/');
   thingName = els[0];
   
@@ -69,21 +104,20 @@ const insertEvent = function(topic, payload) {
     });
     things.push(thing);
   }
-  console.log();
-  console.log(JSON.stringify(thing));
-  console.log("\n");
-  if (!thing.created) {
-    console.log("not created");
-    thing.create([
-      { timestamp: new Date(), stream: topic, value: payload }
-    ])
-  } else {
-    console.log("created");
-    thing.append([
-      { timestamp: new Date(), stream: topic, value: payload }
-    ])
-  }
+  thing.addEvent(event);
+  // if (thing.events.length > 5) {
+  //   thing.push()
+  // }
 }
 
 connect();
 
+const update = function () {
+  return new Promise(resolve => {
+    for (thing of things) {
+      thing.push();
+    }
+  })
+}
+
+setInterval(update, 1000);
