@@ -1,26 +1,3 @@
-// var mqtt = require('mqtt')  
-// var mongodb = require('mongodb');
-// var mongodbClient = mongodb.MongoClient;
-// var mongodbURI = 'mongodb://localhost:27017';
-// 
-// // Database Name
-// const dbName = 'sensor-data';
-// 
-// mongodbClient.connect(mongodbURI, { useUnifiedTopology: true }, setupCollection);
-// 
-// function setupCollection(err,client) {  
-//   if(err) throw err;
-//   const db = client.db(dbName);
-//   client = mqtt.createClient(1883,'localhost')
-//   client.subscribe("#")
-//   client.on('message', insertEvent);
-// }
-// 
-// function insertEvent(topic,payload) {
-//   console.log(topic + ", " + event);
-// }
-
-// const MongoClient = require('mongodb').MongoClient;
 const mqtt = require('mqtt')
 const dotenv = require('dotenv').config()
 const path = require('path')
@@ -70,99 +47,15 @@ class Thing {
   }
 }
 
-// Connection URL
-// const url = 'mongodb://localhost:27017';
-
-// Database Name
-// const dbName = 'sensor-data';
-
-// var collection, client;
-
-//@attention iot-raspberrypi is the IoT platform service name in this example, you should replace it with yours
-// var iotPlatformServiceName = 'data-informed-design';
-
-// IBM IoT service
-// var Client = require('ibmiotf');
-
-
-
-// var deviceClient = new Client.IotfDevice(config);
-
-// deviceClient.connect();
- 
-// deviceClient.on('connect', function () {
-//   console.log("Successfully connected to our IoT service!");
-// //Add your code here
-// });
-
 var things = [];
 
-let thingName = "sensor";
-
-
-const file = new Thing({
-    path: path.resolve(directory, thingName + '.csv'),
-    // headers to write
-    headers: ['stream', 'timestamp', 'value'],
-    name: thingName
-});
-
-if (file.created) {
-  file.create([
-    {}
-  ])
-}
-
-// file.read()
-//   .then(contents => {
-//     console.log(`${contents}`);
-//   })
-  
-
-
-    //     csvFile.append([
-    //         { a: 'a4', b: 'b4', c: 'c4' },
-    //         { a: 'a5', b: 'b5', c: 'c5' },
-    //     ])
-    // 
-    // // append another row
-    // .then(() => csvFile.append([{ a: 'a6', b: 'b6', c: 'c6' }]))
-    // .then(() => csvFile.read())
-    // .then(contents => {
-    //     console.log(`${contents}`);
-    // })
-    // .catch(err => {
-    //     console.error(err.stack);
-    //     process.exit(1);
-    // });
-
-// // Use connect method to connect to the server
-// MongoClient.connect(url, { useUnifiedTopology: true }, function(err, c) {
-//   console.log("Connected successfully to server");
-// 
-//   const db = c.db(dbName);
-//   collection = db.collection(dbName);
 const connect = function () {
   client = mqtt.connect({ host:'broker.shiftr.io', port:1883, username:process.env.USERNAME, password:process.env.PASSWORD, clientId:"hub_" + Math.random().toString(16).substr(2, 8)  });
   client.subscribe('#');
   client.on('message', insertEvent);
 }
-// });
 
 const insertEvent = function(topic, payload) {
-//   // Get the documents collection
-//   // const collection = db.collection('documents');
-//   console.log(topic + ", " + payload);
-//   // deviceClient.publish("state","json",'{"d" : { "cpu" : 60, "mem" : 50 }}');
-//   // Insert some documents
-//   collection.updateOne(
-//     { _id: topic },
-//     { $push: { events: { event: { value:parseInt(payload), when:new Date() } } } },
-//     { upsert: true },
-//     function(err,docs) {
-//       if(err) { console.log("Insert fail"); } // Improve error handling
-//     }
-//   );
   const els = topic.split('/');
   thingName = els[0];
   
@@ -190,12 +83,6 @@ const insertEvent = function(topic, payload) {
       { timestamp: new Date(), stream: topic, value: payload }
     ])
   }
-  
-  // for (const thing of things) {
-  //   if (thing.name === thingName) {
-  //     if (thing.created
-  //   }
-  // }
 }
 
 connect();
