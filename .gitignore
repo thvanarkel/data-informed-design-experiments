@@ -4,3 +4,4 @@ probe/arduino_secrets.h
 hub/arduino_secrets.h
 hub/node_modules
 hub/secret.js
+hub/.env

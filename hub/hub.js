@@ -22,6 +22,7 @@
 
 const MongoClient = require('mongodb').MongoClient;
 const mqtt = require('mqtt')
+const dotenv = require('dotenv').config()
 
 // Connection URL
 const url = 'mongodb://localhost:27017';
@@ -36,7 +37,6 @@ var collection, client;
 
 // IBM IoT service
 // var Client = require('ibmiotf');
-var secret = require('secret.js');
 
 
 
@@ -57,7 +57,7 @@ MongoClient.connect(url, { useUnifiedTopology: true }, function(err, c) {
 
   const db = c.db(dbName);
   collection = db.collection(dbName);
-  client = mqtt.connect({ host:'broker.shiftr.io', port:1883, password:password, username:username });
+  client = mqtt.connect({ host:'broker.shiftr.io', port:1883, username:process.env.USERNAME, password:process.env.PASSWORD  });
   client.subscribe('#');
   client.on('message', insertEvent);
 });
