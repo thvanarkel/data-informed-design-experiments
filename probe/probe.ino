@@ -159,8 +159,8 @@ void app_main() {
 
 Reactduino app(app_main);
 
-void sendUpdate(String topic, String payload) {
-  publishMessage("/" + THING_NAME + topic, payload);
+void publishMessage(String topic, String payload) {
+  client.publish(String("/") + THING_NAME + topic, payload);
 }
 
 void connect() {
