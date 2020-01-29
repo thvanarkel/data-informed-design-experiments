@@ -3,7 +3,6 @@ const dotenv = require('dotenv').config()
 const path = require('path')
 const fs = require('fs')
 const csv = require('fast-csv')
-var async = require('async')
 
 const directory = process.env['HOME'] + '/sensor-data';
 
