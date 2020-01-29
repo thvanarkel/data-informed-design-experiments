@@ -17,7 +17,7 @@ MQTTClient client;
 #define THING_NAME "bed"
 
 #define DIGITAL_LIGHT
-#define MICROPHONE
+//#define MICROPHONE
 #define MOTION
   #define MOTION_PIN 5
 
@@ -27,38 +27,47 @@ int oldLightLevel = 0;
 void sampleLight() {
   int lightLevel = TSL2561.readVisibleLux();
 //  if (lightLevel != oldLightLevel) {
-    Serial.print("Light level is: ");
+    Serial.print("/light: ");
     Serial.println(lightLevel);
-    client.publish("/light", String(lightLevel));
+    publishMessage("/light", String(lightLevel));
     oldLightLevel = lightLevel;
 //  }
 }
 #endif
 
 #ifdef MICROPHONE
-struct SoundSample {
-  int minimum;
-  int maximum;
-  int average;
-};
 
 void sampleSound() {
+  Serial.println("sample sound");
+  I2S.flush();
   unsigned long lastMillis = millis();
-  SoundSample theSample;
   long total = 0;
   long measurements = 0;
+  int minimum = 100000;
+  int maximum = -100000;
+  int average = 0;
   while (millis() - lastMillis < 500) {
     int delta = sample();
-    theSample.minimum = min(theSample.minimum, delta);
-    theSample.maximum = max(theSample.maximum, delta);
+//    Serial.println(delta);
+    minimum = min(minimum, delta);
+    maximum = max(maximum, delta);
     total += delta;
     measurements++;
   }
-  theSample.average = total/measurements;
-  client.publish("/sound/minimum", String(theSample.minimum));
-  client.publish("/sound/maximum", String(theSample.maximum));
-  client.publish("/sound/average", String(theSample.average));
+//  Serial.println(measurements);
+  average = total/measurements; // Make sure it doesn't divide by 0!
+//  Serial.print("/sound/minimum: ");
+//  Serial.print(minimum);
+//  Serial.print(" ");
+  publishMessage("/sound/minimum", String(minimum));
+//  Serial.print("/sound/average: ");
+//  Serial.print(average);
+  publishMessage("/sound/average", String(average));
+//  Serial.print("/sound/maximum: ");
+//  Serial.println(maximum);
+  publishMessage("/sound/maximum", String(maximum));
 }
+
 
 #define SAMPLES 128 // make it a power of two for best DMA performance
 
@@ -67,7 +76,7 @@ int sample() {
   int samples[SAMPLES];
  
   for (int i=0; i<SAMPLES; i++) {
-    int sample = 0; 
+    int sample = 0;
     while ((sample == 0) || (sample == -1) ) {
       sample = I2S.read();
     }
@@ -82,6 +91,7 @@ int sample() {
     meanval += samples[i];
   }
   meanval /= SAMPLES;
+  
   
   // subtract it from all sapmles to get a 'normalized' output
   for (int i=0; i<SAMPLES; i++) {
@@ -104,7 +114,9 @@ int sample() {
 #ifdef MOTION
 void sampleMotion() {
   int val = digitalRead(MOTION_PIN);
-  client.publish("/motion", String(val));
+  Serial.print("/motion: ");
+  Serial.println(val);
+  publishMessage("/motion", String(val));
 }
 #endif
 
@@ -114,6 +126,8 @@ void loop_main() {
   if (!client.connected()) {
     connect();
   }
+//  int delta = sample();
+//  Serial.println(delta);
 }
 
 void app_main() {
@@ -125,7 +139,7 @@ void app_main() {
   #ifdef DIGITAL_LIGHT
   Wire.begin();
   TSL2561.init();
-  app.repeat(30000, sampleLight);
+  app.repeat(1000, sampleLight);
   #endif
   
   #ifdef MICROPHONE
@@ -137,13 +151,17 @@ void app_main() {
   #endif
 
   #ifdef MOTION
-  app.repeat(10000, sampleMotion);
+  app.repeat(1000, sampleMotion);
   #endif
   
   app.onTick(loop_main);
 }
 
 Reactduino app(app_main);
+
+void sendUpdate(String topic, String payload) {
+  publishMessage("/" + THING_NAME + topic, payload);
+}
 
 void connect() {
   Serial.print("checking wifi...");
@@ -166,6 +184,5 @@ void connect() {
 
   Serial.println("\nconnected!");
 
-  client.subscribe("/hello");
   // client.unsubscribe("/hello");
 }
