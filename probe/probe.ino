@@ -17,9 +17,12 @@ MQTTClient client;
 #define THING_NAME "bed"
 
 #define DIGITAL_LIGHT
+  #define LIGHT_SAMPLING_INTERVAL 1000
 //#define MICROPHONE
+//  #define SOUND_SAMPLING_INTERVAL 1000
 #define MOTION
   #define MOTION_PIN 5
+  #define MOTION_SAMPLING_INTERVAL 1000
 
 #ifdef DIGITAL_LIGHT
 int oldLightLevel = 0;
@@ -139,7 +142,7 @@ void app_main() {
   #ifdef DIGITAL_LIGHT
   Wire.begin();
   TSL2561.init();
-  app.repeat(1000, sampleLight);
+  app.repeat(LIGHT_SAMPLING_INTERVAL, sampleLight);
   #endif
   
   #ifdef MICROPHONE
@@ -147,11 +150,11 @@ void app_main() {
     Serial.println("Failed to initialize I2S!");
     while (1); // do nothing
   }
-  app.repeat(1000, sampleSound);
+  app.repeat(SOUND_SAMPLING_INTERVAL, sampleSound);
   #endif
 
   #ifdef MOTION
-  app.repeat(1000, sampleMotion);
+  app.repeat(MOTION_SAMPLING_INTERVAL, sampleMotion);
   #endif
   
   app.onTick(loop_main);
