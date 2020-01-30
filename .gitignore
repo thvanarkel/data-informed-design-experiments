@@ -5,3 +5,6 @@ hub/arduino_secrets.h
 hub/node_modules
 hub/secret.js
 hub/.env
+probe/Hardware/~$Left_shell.SLDPRT
+probe/Hardware/~$Right_shell.SLDPRT
+probe/Hardware/~$Shell.SLDASM
