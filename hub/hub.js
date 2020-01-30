@@ -15,8 +15,6 @@ class Thing {
     });
   }
   
-
-
   constructor(opts) {
     this.headers = opts.headers;
     this.path = opts.path;
@@ -119,4 +117,4 @@ const update = function () {
   })
 }
 
-setInterval(update, 1000);
+setInterval(update, 5000);
