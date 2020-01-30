@@ -26,163 +26,37 @@ MQTTClient client;
 #define MOTION_PIN 5
 #define MOTION_SAMPLING_INTERVAL 2000
 
-#ifdef DIGITAL_LIGHT
-int oldLightLevel = 0;
-
-void sampleLight() {
-  int lightLevel = TSL2561.readVisibleLux();
-  //  if (lightLevel != oldLightLevel) {
-//  Serial.print("/light: ");
-//  Serial.println(lightLevel);
-  publishMessage("/light", String(lightLevel));
-  oldLightLevel = lightLevel;
-  //  }
-}
-#endif
-
 #ifdef MICROPHONE
-
-movingAvg level(128);
-
-void sampleSound() {
-//  Serial.println("sample sound");
-//  unsigned long lastMillis = millis();
-//  long total = 0;
-//  long measurements = 0;
-//  int minimum = 100000;
-//  int maximum = -100000;
-//  int average = 0;
-//  while (millis() - lastMillis < 500) {
-//    int delta = sample(); 
-//    minimum = min(minimum, delta);
-//    maximum = max(maximum, delta);
-//    total += delta;
-//    measurements++;
-//  }
-  //  Serial.println(measurements);
-//  average = total / measurements; // Make sure it doesn't divide by 0!
-  //  Serial.print("/sound/minimum: ");
-  //  Serial.print(minimum);
-  //  Serial.print(" ");
-//  publishMessage("/sound/minimum", String(minimum));
-  //  Serial.print("/sound/average: ");
-  //  Serial.print(average);
-  publishMessage("/sound/average", String(level.getAvg()));
-  //  Serial.print("/sound/maximum: ");
-  //  Serial.println(maximum);
-//  publishMessage("/sound/maximum", String(maximum));
-}
-
-
-#define SAMPLES 128 // make it a power of two for best DMA performance
-
-#define I2S_BUFFER_SIZE 512
-uint8_t buffer[I2S_BUFFER_SIZE];
-#define I2S_BITS_PER_SAMPLE 32
-int *I2Svalues = (int *) buffer;
-
-boolean printout = true;
-
-int sample() {
-  // read a bunch of samples:
-  int samples[SAMPLES];
-  int nSamples = 0;
-  int maxsample = -100000;
-  int minsample = 1000000;
-
-//  for (int i = 0; i < SAMPLES; i++) {
-//    int sample = 0;
-//    int ticks = 0;
-//    while ((sample == 0) || (sample == -1) ) {
+  movingAvg level(128);
   
-//  I2S.flush();
-  while (nSamples < SAMPLES) {
-    I2S.read(buffer, I2S_BUFFER_SIZE);
-    for (int i = 0; i < I2S_BITS_PER_SAMPLE; i++) {
-      if ((I2Svalues[i]!= 0) && (I2Svalues[i] != -1)) {
-        I2Svalues[i] >>= 14;
-        if (nSamples < SAMPLES) {
-//          Serial.println(samples[i]);
-          samples[nSamples] = I2Svalues[i];
-        }
-        nSamples++;
-      }
-    }
-    
-  }
-  float meanval;
-  for (int i = 0; i < SAMPLES; i++) {
-    
-    meanval += samples[i];
-  }
-  meanval /= SAMPLES;
-  for (int i = 0; i < SAMPLES; i++) {
-     samples[i] += meanval;
-  }
-  for (int i = 0; i < SAMPLES; i++) {
-     minsample = min(minsample, samples[i]);
-     maxsample = max(maxsample, samples[i]);
-  }
-
-  
-  Serial.print(maxsample - minsample);
-  Serial.print(" ");
-  Serial.println(level.getAvg());
-//  Serial.print(" ");
-//  Serial.print(abs(maxsample));
-//  Serial.print(" ");
-//  Serial.println(abs(minsample);
-  
-
-//  // ok we have the samples, get the mean (avg)
-//  float meanval = 0;
-//  for (int i = 0; i < SAMPLES; i++) {
-//    meanval += samples[i];
-//  }
-//  meanval /= SAMPLES;
-//  // subtract it from all sapmles to get a 'normalized' output
-//  for (int i = 0; i < SAMPLES; i++) {
-//    samples[i] -= meanval;
-//  }
-//  // find the 'peak to peak' max
-//  float maxsample, minsample;
-//  minsample = 100000;
-//  maxsample = -100000;
-//  for (int i = 0; i < SAMPLES; i++) {
-//    minsample = min(minsample, samples[i]);
-//    maxsample = max(maxsample, samples[i]);
-//  }
-//  Serial.print(maxsample - minsample);
-//  Serial.print(" ");
-  return (maxsample - minsample);
-}
+  #define SAMPLES 128 // make it a power of two for best DMA performance
+  #define I2S_BUFFER_SIZE 512
+  uint8_t buffer[I2S_BUFFER_SIZE];
+  #define I2S_BITS_PER_SAMPLE 32
+  int *I2Svalues = (int *) buffer;
 #endif
 
-#ifdef MOTION
-void sampleMotion() {
-  int val = digitalRead(MOTION_PIN);
-//  Serial.print("/motion: ");
-//  Serial.println(val);
-  publishMessage("/motion", String(val));
-}
-#endif
-
+/*
+ *  MAIN LOOP
+ *  ---------
+ */
 void loop_main() {
   client.loop();
 
   if (!client.connected()) {
     connect();
   }
-  //  int delta = sample();
-  //  Serial.println(delta);
-  #ifdef MICROPHONE;
+
+#ifdef MICROPHONE;
   int reading = sample() - MICROPHONE_BASELINE;
   level.reading(reading);
-//  Serial.print(reading);
-//  Serial.print(" ");
-//  Serial.println(level.getAvg());
-  #endif;
+#endif;
 }
+
+/*
+ *  SETUP
+ *  -----
+ */
 
 void app_main() {
   Serial.begin(115200);
@@ -214,6 +88,87 @@ void app_main() {
 
 Reactduino app(app_main);
 
+/*
+ * LIGHT SAMPLING
+ * --------------
+ */
+
+#ifdef DIGITAL_LIGHT
+int oldLightLevel = 0;
+
+void sampleLight() {
+  int lightLevel = TSL2561.readVisibleLux();
+  //  if (lightLevel != oldLightLevel) {
+//  Serial.print("/light: ");
+//  Serial.println(lightLevel);
+  publishMessage("/light", String(lightLevel));
+  oldLightLevel = lightLevel;
+  //  }
+}
+#endif
+
+#ifdef MICROPHONE
+
+void sampleSound() {
+  //  Serial.print("/sound: ");
+  //  Serial.print(average);
+  publishMessage("/sound", String(level.getAvg()));
+}
+
+
+
+
+int sample() {
+  // read a bunch of samples:
+  int samples[SAMPLES];
+  int nSamples = 0;
+  int maxsample = -100000;
+  int minsample = 1000000;
+
+  while (nSamples < SAMPLES) {
+    I2S.read(buffer, I2S_BUFFER_SIZE);
+    for (int i = 0; i < I2S_BITS_PER_SAMPLE; i++) {
+      if ((I2Svalues[i]!= 0) && (I2Svalues[i] != -1)) {
+        I2Svalues[i] >>= 14;
+        if (nSamples < SAMPLES) {
+          samples[nSamples] = I2Svalues[i];
+        }
+        nSamples++;
+      }
+    }
+    
+  }
+  float meanval;
+  for (int i = 0; i < SAMPLES; i++) {
+    
+    meanval += samples[i];
+  }
+  meanval /= SAMPLES;
+  for (int i = 0; i < SAMPLES; i++) {
+     samples[i] += meanval;
+  }
+  for (int i = 0; i < SAMPLES; i++) {
+     minsample = min(minsample, abs(samples[i]));
+     maxsample = max(maxsample, abs(samples[i]));
+  }  
+//  Serial.print((maxsample - minsample) - MICROPHONE_BASELINE);
+//  Serial.print(" ");
+//  Serial.print(level.getAvg());
+  return (maxsample - minsample);
+}
+#endif
+
+#ifdef MOTION
+void sampleMotion() {
+  int val = digitalRead(MOTION_PIN);
+//  Serial.print("/motion: ");
+//  Serial.println(val);
+  publishMessage("/motion", String(val));
+}
+#endif
+
+
+
 void publishMessage(String topic, String payload) {
   client.publish(String("/") + THING_NAME + topic, payload);
 }
@@ -238,6 +193,4 @@ void connect() {
   }
 
   Serial.println("\nconnected!");
-
-  // client.unsubscribe("/hello");
 }
