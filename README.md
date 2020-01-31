@@ -3,7 +3,7 @@
 
 In order to get I2S running on the Arduino Nano 33 IoT add the following to `~/Library/Arduino15/packages/arduino/hardware/samd/1.8.3/variants/nano_33_iot/variant.h`
 
-```
+```c++
 // I2S Interfaces
 // --------------
 #define I2S_INTERFACES_COUNT 1
@@ -16,3 +16,18 @@ In order to get I2S running on the Arduino Nano 33 IoT add the following to `~/L
 #define PIN_I2S_FS (PIN_A2)
 ```
 Based on [ArduinoCore-samd#471](https://github.com/arduino/ArduinoCore-samd/pull/471)
+
+## Hub
+In order to get to hub running do the following
+
+```
+$ cd /hub
+$ npm install
+$ touch .env
+$ nano .env
+```
+add the following lines to the `.env` file, and replace the variables with your login credentials:
+```
+USERN=mqtt_username
+PASSWORD=mqtt_password
+```
