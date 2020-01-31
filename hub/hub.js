@@ -4,7 +4,7 @@ const path = require('path')
 const fs = require('fs')
 const csv = require('fast-csv')
 
-const directory = process.env['HOME'] + '/sensor-data';
+const directory = require('os').homedir() + '/Documents/sensor-data';
 
 class Thing {
   static write(filestream, rows, options) {
@@ -79,7 +79,7 @@ class Event {
 var things = [];
 
 const connect = function () {
-  client = mqtt.connect({ host:'broker.shiftr.io', port:1883, username:process.env.USERNAME, password:process.env.PASSWORD, clientId:"hub_" + Math.random().toString(16).substr(2, 8)  });
+  client = mqtt.connect({ host:'broker.shiftr.io', port:1883, username:process.env.USERN, password:process.env.PASSWORD, clientId:"hub_" + Math.random().toString(16).substr(2, 8)  });
   client.subscribe('#');
   client.on('message', insertEvent);
 }
