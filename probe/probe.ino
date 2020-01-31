@@ -1,3 +1,6 @@
+#include <Adafruit_SleepyDog.h>
+
+
 #include <Wire.h>
 #include <Digital_Light_TSL2561.h>
 #include <Reactduino.h>
@@ -36,22 +39,6 @@ MQTTClient client;
   int *I2Svalues = (int *) buffer;
 #endif
 
-/*
- *  MAIN LOOP
- *  ---------
- */
-void loop_main() {
-  client.loop();
-
-  if (!client.connected()) {
-    connect();
-  }
-
-#ifdef MICROPHONE;
-  int reading = sample() - MICROPHONE_BASELINE;
-  level.reading(reading);
-#endif;
-}
 
 /*
  *  SETUP
@@ -60,6 +47,9 @@ void loop_main() {
 
 void app_main() {
   Serial.begin(115200);
+
+  
+  
   WiFi.begin(ssid, pass);
   client.begin("broker.shiftr.io", net);
   connect();
@@ -77,6 +67,7 @@ void app_main() {
     while (1); // do nothing
   }
   app.repeat(SOUND_SAMPLING_INTERVAL, sampleSound);
+  I2S.read();
 #endif
 
 #ifdef MOTION
@@ -84,9 +75,32 @@ void app_main() {
 #endif
 
   app.onTick(loop_main);
+  int countdownMS = Watchdog.enable(4000);
+  publishMessage("/system/reset", String(Watchdog.resetCause()));
 }
 
 Reactduino app(app_main);
+
+/*
+ *  MAIN LOOP
+ *  ---------
+ */
+void loop_main() {
+  Watchdog.reset();
+  client.loop();
+
+  if (!client.connected()) {
+    connect();
+  }
+
+#ifdef MICROPHONE;
+  int reading = sample() - MICROPHONE_BASELINE;
+  level.reading(reading);
+//  Serial.print(reading);
+//  Serial.print(" ");
+//  Serial.println(level.getAvg());
+#endif;
+}
 
 /*
  * LIGHT SAMPLING
