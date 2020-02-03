@@ -1,19 +1,29 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  margin: auto;
-  max-width: 38rem;
-  padding: 2rem;
+svg {
+  font: 10px sans-serif;
 }
 
 .area {
-  fill: steelblue;
+  fill: lightgray;
   clip-path: url(#clip);
 }
 
-.zoom {
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: 0.125;
+  shape-rendering: crispEdges;
+  clip-path: url(#clip);
+}
+
+rect.pane {
   cursor: move;
   fill: none;
-  pointer-events: all;
 }
 
 /*# sourceMappingURL=index.css.map */
