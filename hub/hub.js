@@ -18,7 +18,7 @@ class Thing {
   constructor(opts) {
     this.headers = opts.headers;
     this.path = opts.path;
-    this.writeOpts = { headers: this.headers, includeEndRowDelimiter: true, rowDelimiter:"\n", quoteColumns: true };
+    this.writeOpts = { headers: this.headers, includeEndRowDelimiter: true, rowDelimiter:"\n" };
     this.name = opts.name;
     this.readings = [];
     this.created = fs.existsSync(opts.path)
@@ -86,7 +86,8 @@ const connect = function () {
 
 const insertReading = function(topic, payload) {
   // Create Reading
-  const reading = new Reading(new Date(), topic, payload);
+  const reading = new Reading(new Date().toISOString(), topic, payload);
+  console.log(reading)
 
   const els = topic.split('/');
   thingName = els[0];
