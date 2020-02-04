@@ -14,13 +14,13 @@ class Thing {
             .on('finish', () => res());
     });
   }
-  
+
   constructor(opts) {
     this.headers = opts.headers;
     this.path = opts.path;
     this.writeOpts = { headers: this.headers, includeEndRowDelimiter: true, rowDelimiter:"\n", quoteColumns: true };
     this.name = opts.name;
-    this.events = [];
+    this.readings = [];
     this.created = fs.existsSync(opts.path)
   }
 
@@ -46,29 +46,29 @@ class Thing {
         });
     });
   }
-  
+
   async push() {
-    await Thing.write(fs.createWriteStream(this.path, { flags: 'a' }), this.events, {
+    await Thing.write(fs.createWriteStream(this.path, { flags: 'a' }), this.readings, {
         ...this.writeOpts,
         writeHeaders: false,
     });
-    console.log("pushed " + this.events.length + " events");
-    this.events = [];
+    console.log("pushed " + this.readings.length + " readings");
+    this.readings = [];
   }
-  
-  addEvent(event) {
+
+  addReading(reading) {
     if (!this.created) {
       this.create([
-        { timestamp: event.timestamp, stream: event.stream, value: event.value }
+        { timestamp: reading.timestamp, stream: reading.stream, value: reading.value }
       ])
     } else {
-      this.events.push(event);
+      this.readings.push(reading);
 
     }
   }
 }
 
-class Event {
+class Reading {
   constructor(timestamp, stream, value) {
     this.timestamp = timestamp;
     this.stream = stream;
@@ -81,19 +81,19 @@ var things = [];
 const connect = function () {
   client = mqtt.connect({ host:'broker.shiftr.io', port:1883, username:process.env.USERN, password:process.env.PASSWORD, clientId:"hub_" + Math.random().toString(16).substr(2, 8)  });
   client.subscribe('#');
-  client.on('message', insertEvent);
+  client.on('message', insertReading);
 }
 
-const insertEvent = function(topic, payload) {
-  // Create Event
-  const event = new Event(new Date(), topic, payload);
-  
+const insertReading = function(topic, payload) {
+  // Create Reading
+  const reading = new Reading(new Date(), topic, payload);
+
   const els = topic.split('/');
   thingName = els[0];
-  
+
   var thing = things.find(thing => thing.name === thingName)
   if (!thing) {
-    thing = new Thing({ 
+    thing = new Thing({
       path: path.resolve(directory, thingName + '.csv'),
       // headers to write
       headers: ['stream', 'timestamp', 'value'],
@@ -101,8 +101,8 @@ const insertEvent = function(topic, payload) {
     });
     things.push(thing);
   }
-  thing.addEvent(event);
-  // if (thing.events.length > 5) {
+  thing.addReading(reading);
+  // if (thing.readings.length > 5) {
   //   thing.push()
   // }
 }
