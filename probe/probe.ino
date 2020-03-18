@@ -1,6 +1,3 @@
-#include <Adafruit_SleepyDog.h>
-
-
 #include <Wire.h>
 #include <Digital_Light_TSL2561.h>
 #include <Reactduino.h>
@@ -9,7 +6,7 @@
 #include <I2S.h>
 #include <movingAvg.h>
 
-#include "arduino_secrets.h"
+#include "configuration.h"
 
 const char ssid[] = SECRET_SSID;
 const char pass[] = SECRET_PASS;
@@ -18,6 +15,8 @@ WiFiClient net;
 MQTTClient client;
 
 // CONFIGURATION
+#define HOST_NAME "broker.shiftr.io"
+
 #define THING_NAME "bed"
 
 #define DIGITAL_LIGHT
@@ -31,7 +30,6 @@ MQTTClient client;
 
 #ifdef MICROPHONE
   movingAvg level(128);
-  
   #define SAMPLES 128 // make it a power of two for best DMA performance
   #define I2S_BUFFER_SIZE 512
   uint8_t buffer[I2S_BUFFER_SIZE];
@@ -47,11 +45,8 @@ MQTTClient client;
 
 void app_main() {
   Serial.begin(115200);
-
-  
-  
   WiFi.begin(ssid, pass);
-  client.begin("broker.shiftr.io", net);
+  client.begin(HOST_NAME, net);
   connect();
 
 #ifdef DIGITAL_LIGHT
@@ -181,8 +176,6 @@ void sampleMotion() {
 }
 #endif
 
-
-
 void publishMessage(String topic, String payload) {
   client.publish(String("/") + THING_NAME + topic, payload);
 }
@@ -205,6 +198,5 @@ void connect() {
     Serial.print(".");
     delay(1000);
   }
-
   Serial.println("\nconnected!");
 }
