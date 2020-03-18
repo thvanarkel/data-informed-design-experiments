@@ -1,4 +1,4 @@
-# data-informed-design
+# data-informed-design-experiments
 
 
 In order to get I2S running on the Arduino Nano 33 IoT add the following to `~/Library/Arduino15/packages/arduino/hardware/samd/1.8.3/variants/nano_33_iot/variant.h`
