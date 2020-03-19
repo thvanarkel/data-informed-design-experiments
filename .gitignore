@@ -1,7 +1,7 @@
 
 probe/secrets.ino
 probe/arduino_secrets.h
-collector/configuration.h
+probe/configuration.h
 collector/node_modules
 collector/secret.js
 collector/.env
