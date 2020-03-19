@@ -1,10 +1,10 @@
 
 probe/secrets.ino
 probe/arduino_secrets.h
-hub/arduino_secrets.h
-hub/node_modules
-hub/secret.js
-hub/.env
+collector/config.h
+collector/node_modules
+collector/secret.js
+collector/.env
 probe/Hardware/~$Left_shell.SLDPRT
 probe/Hardware/~$Right_shell.SLDPRT
 probe/Hardware/~$Shell.SLDASM
