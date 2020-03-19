@@ -14,19 +14,7 @@ const char pass[] = SECRET_PASS;
 WiFiClient net;
 MQTTClient client;
 
-// CONFIGURATION
-#define HOST_NAME "broker.shiftr.io"
 
-#define THING_NAME "bed"
-
-#define DIGITAL_LIGHT
-#define LIGHT_SAMPLING_INTERVAL 8000
-#define MICROPHONE
-#define MICROPHONE_BASELINE 7200
-#define SOUND_SAMPLING_INTERVAL 1000
-#define MOTION
-#define MOTION_PIN 5
-#define MOTION_SAMPLING_INTERVAL 2000
 
 #ifdef MICROPHONE
   movingAvg level(128);
@@ -145,11 +133,11 @@ int sample() {
         nSamples++;
       }
     }
-    
+
   }
   float meanval;
   for (int i = 0; i < SAMPLES; i++) {
-    
+
     meanval += samples[i];
   }
   meanval /= SAMPLES;
@@ -159,7 +147,7 @@ int sample() {
   for (int i = 0; i < SAMPLES; i++) {
      minsample = min(minsample, abs(samples[i]));
      maxsample = max(maxsample, abs(samples[i]));
-  }  
+  }
 //  Serial.print((maxsample - minsample) - MICROPHONE_BASELINE);
 //  Serial.print(" ");
 //  Serial.print(level.getAvg());
