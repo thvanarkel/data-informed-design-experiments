@@ -14,19 +14,7 @@ const char pass[] = SECRET_PASS;
 WiFiClient net;
 MQTTClient client;
 
-// CONFIGURATION
-#define HOST_NAME "broker.shiftr.io"
 
-#define THING_NAME "bed"
-
-#define DIGITAL_LIGHT
-#define LIGHT_SAMPLING_INTERVAL 8000
-#define MICROPHONE
-#define MICROPHONE_BASELINE 7200
-#define SOUND_SAMPLING_INTERVAL 1000
-#define MOTION
-#define MOTION_PIN 5
-#define MOTION_SAMPLING_INTERVAL 2000
 
 #ifdef MICROPHONE
   movingAvg level(128);
