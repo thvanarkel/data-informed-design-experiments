@@ -1,3 +1,4 @@
+#include <Adafruit_SleepyDog.h>
 #include <Wire.h>
 #include <Digital_Light_TSL2561.h>
 #include <Reactduino.h>
@@ -133,11 +134,11 @@ int sample() {
         nSamples++;
       }
     }
-
+    
   }
   float meanval;
   for (int i = 0; i < SAMPLES; i++) {
-
+    
     meanval += samples[i];
   }
   meanval /= SAMPLES;
@@ -147,7 +148,7 @@ int sample() {
   for (int i = 0; i < SAMPLES; i++) {
      minsample = min(minsample, abs(samples[i]));
      maxsample = max(maxsample, abs(samples[i]));
-  }
+  }  
 //  Serial.print((maxsample - minsample) - MICROPHONE_BASELINE);
 //  Serial.print(" ");
 //  Serial.print(level.getAvg());
