@@ -3,8 +3,14 @@ const dotenv = require('dotenv').config()
 const path = require('path')
 const fs = require('fs')
 const csv = require('fast-csv')
+const {InfluxDB, Point, FluxTableMetaData} = require('@influxdata/influxdb-client')
+const {hostname} = require('os')
 
 const directory = require('os').homedir() + '/Documents/sensor-data';
+
+const dbClient = new InfluxDB({url: process.env.HOST, token: process.env.TOKEN})
+
+var points = [];
 
 class Thing {
   static write(filestream, rows, options) {
@@ -85,12 +91,19 @@ const connect = function () {
 }
 
 const insertReading = function(topic, payload) {
-  // Create Reading
-  const reading = new Reading(new Date().toISOString(), topic, payload);
-  console.log(reading)
-
   const els = topic.split('/');
   thingName = els[0];
+
+  const point = new Point(els[1])
+    .tag('thing', thingName)
+    .intField('value', parseInt(payload))
+    .timestamp(String(new Date().getTime()))
+
+  points.push(point)
+  console.log(` ${point}`)
+
+  // // Create Reading
+  const reading = new Reading(new Date().toISOString(), topic, payload);
 
   var thing = things.find(thing => thing.name === thingName)
   if (!thing) {
@@ -103,19 +116,37 @@ const insertReading = function(topic, payload) {
     things.push(thing);
   }
   thing.addReading(reading);
-  // if (thing.readings.length > 5) {
-  //   thing.push()
-  // }
+  if (thing.readings.length > 5) {
+    thing.push()
+  }
 }
 
 connect();
 
 const update = function () {
-  return new Promise(resolve => {
-    for (thing of things) {
-      thing.push();
-    }
-  })
+  // return new Promise(resolve => {
+  //   for (thing of things) {
+  //     thing.push();
+  //   }
+  // })
+
+  console.log('*** WRITE POINTS ***')
+
+  const writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
+  // setup default tags for all writes through this API
+  writeApi.useDefaultTags({location: hostname()})
+
+  cPoints = points
+  points = []
+  writeApi.writePoints(cPoints)
+
+  // flush pending writes and close writeApi
+  writeApi
+    .close()
+    .then(() => {
+      console.log(cPoints)
+      console.log('FINISHED ... now try ./query.ts')
+    })
 }
 
 setInterval(update, 5000);
