@@ -12,6 +12,12 @@ const dbClient = new InfluxDB({url: process.env.HOST, token: process.env.TOKEN})
 
 var points = [];
 
+var aLog = {
+  collected: 0,
+  toDisk: 0,
+  toOnline: 0
+}
+
 class Thing {
   static write(filestream, rows, options) {
     return new Promise((res, rej) => {
@@ -27,6 +33,7 @@ class Thing {
     this.writeOpts = { headers: this.headers, includeEndRowDelimiter: true, rowDelimiter:"\n" };
     this.name = opts.name;
     this.readings = [];
+    this.points = [];
     this.created = fs.existsSync(opts.path)
   }
 
@@ -54,12 +61,26 @@ class Thing {
   }
 
   async push() {
+    // Write readings to the csv file on disk
     await Thing.write(fs.createWriteStream(this.path, { flags: 'a' }), this.readings, {
         ...this.writeOpts,
         writeHeaders: false,
     });
-    console.log("pushed " + this.readings.length + " readings");
+    // console.log("wrote " + this.readings.length + " to disk");
+    aLog.toDisk = aLog.toDisk + this.readings.length;
     this.readings = [];
+
+    // Push points to the InfluxDB
+    const writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
+    writeApi.useDefaultTags({location: hostname()})
+    writeApi.writePoints(this.points)
+    writeApi
+      .close()
+      .then(() => {
+        // console.log("pushed " + this.points.length + " to online database")
+        aLog.toOnline = aLog.toOnline + this.points.length;
+        this.points = []
+      })
   }
 
   addReading(reading) {
@@ -69,8 +90,11 @@ class Thing {
       ])
     } else {
       this.readings.push(reading);
-
     }
+  }
+
+  addPoint(point) {
+    this.points.push(point);
   }
 }
 
@@ -93,17 +117,18 @@ const connect = function () {
 const insertReading = function(topic, payload) {
   const els = topic.split('/');
   thingName = els[0];
+  time = String(new Date().getTime());
 
   const point = new Point(els[1])
     .tag('thing', thingName)
     .intField('value', parseInt(payload))
-    .timestamp(String(new Date().getTime()))
+    .timestamp(time)
 
   points.push(point)
-  console.log(` ${point}`)
+  // console.log(`${point}`)
 
   // // Create Reading
-  const reading = new Reading(new Date().toISOString(), topic, payload);
+  const reading = new Reading(time, topic, payload);
 
   var thing = things.find(thing => thing.name === thingName)
   if (!thing) {
@@ -116,37 +141,26 @@ const insertReading = function(topic, payload) {
     things.push(thing);
   }
   thing.addReading(reading);
-  if (thing.readings.length > 5) {
-    thing.push()
-  }
+  thing.addPoint(point);
+  // if (thing.readings.length > 5) {
+  //   thing.push()
+  // }
+  aLog.collected = aLog.collected + 1;
 }
 
 connect();
 
 const update = function () {
-  // return new Promise(resolve => {
-  //   for (thing of things) {
-  //     thing.push();
-  //   }
-  // })
+  return new Promise(resolve => {
+    for (thing of things) {
+      thing.push();
+    }
+  });
+}
 
-  console.log('*** WRITE POINTS ***')
-
-  const writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
-  // setup default tags for all writes through this API
-  writeApi.useDefaultTags({location: hostname()})
-
-  cPoints = points
-  points = []
-  writeApi.writePoints(cPoints)
-
-  // flush pending writes and close writeApi
-  writeApi
-    .close()
-    .then(() => {
-      console.log(cPoints)
-      console.log('FINISHED ... now try ./query.ts')
-    })
+const updateLog = function() {
+  console.log(aLog)
 }
 
 setInterval(update, 5000);
+setInterval(updateLog, 1000);
