@@ -116,10 +116,10 @@ const connect = function () {
 
 const insertReading = function(topic, payload) {
   const els = topic.split('/');
-  thingName = els[0];
+  thingName = els[1];
   time = String(new Date().getTime());
 
-  const point = new Point(els[1])
+  const point = new Point(els[2])
     .tag('thing', thingName)
     .intField('value', parseInt(payload))
     .timestamp(time)
