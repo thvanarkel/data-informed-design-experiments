@@ -62,13 +62,15 @@ class Thing {
 
   async push() {
     // Write readings to the csv file on disk
-    await Thing.write(fs.createWriteStream(this.path, { flags: 'a' }), this.readings, {
-        ...this.writeOpts,
-        writeHeaders: false,
-    });
-    // console.log("wrote " + this.readings.length + " to disk");
-    // aLog.toDisk = aLog.toDisk + this.readings.length;
-    this.readings = [];
+    if (this.readings.length > 0) { // don't write empty arrays
+      await Thing.write(fs.createWriteStream(this.path, { flags: 'a' }), this.readings, {
+          ...this.writeOpts,
+          writeHeaders: false,
+      });
+      // console.log("wrote " + this.readings.length + " to disk");
+      // aLog.toDisk = aLog.toDisk + this.readings.length;
+      this.readings = [];
+    }
 
     // Push points to the InfluxDB
     const writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
