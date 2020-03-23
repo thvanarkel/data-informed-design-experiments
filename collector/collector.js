@@ -62,13 +62,15 @@ class Thing {
 
   async push() {
     // Write readings to the csv file on disk
-    await Thing.write(fs.createWriteStream(this.path, { flags: 'a' }), this.readings, {
-        ...this.writeOpts,
-        writeHeaders: false,
-    });
-    // console.log("wrote " + this.readings.length + " to disk");
-    aLog.toDisk = aLog.toDisk + this.readings.length;
-    this.readings = [];
+    if (this.readings.length > 0) { // don't write empty arrays
+      await Thing.write(fs.createWriteStream(this.path, { flags: 'a' }), this.readings, {
+          ...this.writeOpts,
+          writeHeaders: false,
+      });
+      // console.log("wrote " + this.readings.length + " to disk");
+      // aLog.toDisk = aLog.toDisk + this.readings.length;
+      this.readings = [];
+    }
 
     // Push points to the InfluxDB
     const writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
@@ -78,7 +80,7 @@ class Thing {
       .close()
       .then(() => {
         // console.log("pushed " + this.points.length + " to online database")
-        aLog.toOnline = aLog.toOnline + this.points.length;
+        // aLog.toOnline = aLog.toOnline + this.points.length;
         this.points = []
       })
   }
@@ -109,17 +111,17 @@ class Reading {
 var things = [];
 
 const connect = function () {
-  client = mqtt.connect({ host:'broker.shiftr.io', port:1883, username:process.env.USERN, password:process.env.PASSWORD, clientId:"hub_" + Math.random().toString(16).substr(2, 8)  });
+  client = mqtt.connect({ host:'localhost', port:1883, username:process.env.USERN, password:process.env.PASSWORD, clientId:"hub_" + Math.random().toString(16).substr(2, 8)  });
   client.subscribe('#');
   client.on('message', insertReading);
 }
 
 const insertReading = function(topic, payload) {
   const els = topic.split('/');
-  thingName = els[0];
+  thingName = els[1];
   time = String(new Date().getTime());
 
-  const point = new Point(els[1])
+  const point = new Point(els[2])
     .tag('thing', thingName)
     .intField('value', parseInt(payload))
     .timestamp(time)
@@ -142,10 +144,8 @@ const insertReading = function(topic, payload) {
   }
   thing.addReading(reading);
   thing.addPoint(point);
-  // if (thing.readings.length > 5) {
-  //   thing.push()
-  // }
-  aLog.collected = aLog.collected + 1;
+
+  // aLog.collected = aLog.collected + 1;
 }
 
 connect();
@@ -163,4 +163,4 @@ const updateLog = function() {
 }
 
 setInterval(update, 5000);
-setInterval(updateLog, 1000);
+// setInterval(updateLog, 1000);
