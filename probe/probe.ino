@@ -15,8 +15,6 @@ const char pass[] = SECRET_PASS;
 WiFiClient net;
 MQTTClient client;
 
-
-
 #ifdef MICROPHONE
   movingAvg level(128);
   #define SAMPLES 128 // make it a power of two for best DMA performance
@@ -80,9 +78,11 @@ void loop_main() {
 #ifdef MICROPHONE;
   int reading = sample() - MICROPHONE_BASELINE;
   level.reading(reading);
-//  Serial.print(reading);
-//  Serial.print(" ");
-//  Serial.println(level.getAvg());
+  #ifdef DEBUG_AUDIO;
+  Serial.print(reading);
+  Serial.print(" ");
+  Serial.println(level.getAvg());
+  #endif;
 #endif;
 }
 
@@ -96,25 +96,24 @@ int oldLightLevel = 0;
 
 void sampleLight() {
   int lightLevel = TSL2561.readVisibleLux();
-  //  if (lightLevel != oldLightLevel) {
-//  Serial.print("/light: ");
-//  Serial.println(lightLevel);
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/light: ");
+    Serial.println(lightLevel);
+  #endif
   publishMessage("/light", String(lightLevel));
   oldLightLevel = lightLevel;
-  //  }
 }
 #endif
 
 #ifdef MICROPHONE
 
 void sampleSound() {
-  //  Serial.print("/sound: ");
-  //  Serial.print(average);
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/sound: ");
+    Serial.println(level.getAvg());
+  #endif
   publishMessage("/sound", String(level.getAvg()));
 }
-
-
-
 
 int sample() {
   // read a bunch of samples:
@@ -159,8 +158,10 @@ int sample() {
 #ifdef MOTION
 void sampleMotion() {
   int val = digitalRead(MOTION_PIN);
-//  Serial.print("/motion: ");
-//  Serial.println(val);
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/motion: ");
+    Serial.println(val);
+  #endif
   publishMessage("/motion", String(val));
 }
 #endif
