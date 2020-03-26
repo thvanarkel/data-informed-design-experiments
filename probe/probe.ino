@@ -33,10 +33,14 @@ int *I2Svalues = (int *) buffer;
 Seeed_vl53l0x VL53L0X;
 #endif
 
+#if defined(ACCELEROMETER) || defined(GYROSCOPE)
+#include <Arduino_LSM6DS3.h>
+#endif
+
 /*
-    SETUP
-    -----
-*/
+ *  SETUP
+ *  -----
+ */
 
 void app_main() {
   Serial.begin(115200);
@@ -82,7 +86,20 @@ void app_main() {
     VL53L0X.print_pal_error(Status);
     while (1);
   }
-  app.repeat(ToF_SAMPLING, sampleToF);
+  app.repeat(ToF_SAMPLING_INTERVAL, sampleToF);
+#endif
+
+#if defined(ACCELEROMETER) || defined(GYROSCOPE)
+  if (!IMU.begin()) {
+    Serial.println("Failed to initialize IMU!");
+    while (1);
+  }
+#endif
+#ifdef ACCELEROMETER
+  app.repeat(ACCELEROMETER_SAMPLING_INTERVAL, sampleAcceleration);
+#endif
+#ifdef GYROSCOPE
+  app.repeat(GYROSCOPE_SAMPLING_INTERVAL, sampleGyro);
 #endif
 
   app.onTick(loop_main);
@@ -93,9 +110,9 @@ void app_main() {
 Reactduino app(app_main);
 
 /*
-    MAIN LOOP
-    ---------
-*/
+ *  MAIN LOOP
+ *  ---------
+ */
 void loop_main() {
   Watchdog.reset();
   client.loop();
@@ -116,9 +133,9 @@ void loop_main() {
 }
 
 /*
-   DIGITAL LIGHT SAMPLING
-   ----------------------
-*/
+ * DIGITAL LIGHT SAMPLING
+ * ----------------------
+ */
 
 #ifdef DIGITAL_LIGHT
 int oldLightLevel = 0;
@@ -135,9 +152,9 @@ void sampleLight() {
 #endif
 
 /*
-   ANALOG LIGHT SAMPLING
-   ---------------------
-*/
+ * ANALOG LIGHT SAMPLING
+ * ---------------------
+ */
 
 #ifdef ANALOG_LIGHT
 int oldAnalogLightLevel = 0;
@@ -155,9 +172,9 @@ void sampleAnalogLight() {
 #endif
 
 /*
-   MICROPHONE SAMPLING
-   -------------------
-*/
+ * MICROPHONE SAMPLING
+ * -------------------
+ */
 
 #ifdef MICROPHONE
 
@@ -209,9 +226,9 @@ int sample() {
 #endif
 
 /*
-   MOTION SAMPLING
-   ---------------
-*/
+ * MOTION SAMPLING
+ * ---------------
+ */
 
 #ifdef MOTION
 
@@ -248,6 +265,48 @@ void sampleToF() {
       #endif
       publishMessage("/distance", String(RangingMeasurementData.RangeMilliMeter));
     }
+  }
+}
+
+#endif
+
+/*
+ * ACCELERATION SAMPLING
+ * ---------------------
+ */
+
+#ifdef ACCELEROMETER
+
+void sampleAcceleration() {
+  float x, y, z;
+  if (IMU.accelerationAvailable()) {
+    IMU.readAcceleration(x, y, z);
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/acceleration: ");
+    Serial.println(String(x) + ", " + String(y) + ", " + String(z));
+  #endif
+    publishMessage("/acceleration", String(String(x) + ", " + String(y) + ", " + String(z)));
+  }
+}
+
+#endif
+
+/*
+ * GYRO SAMPLING
+ * ---------------------
+ */
+
+#ifdef GYROSCOPE
+
+void sampleGyro() {
+  float x, y, z;
+  if (IMU.gyroscopeAvailable()) {
+    IMU.readGyroscope(x, y, z);
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/orientation: ");
+    Serial.println(String(x) + ", " + String(y) + ", " + String(z));
+  #endif
+    publishMessage("/orientation", String(String(x) + ", " + String(y) + ", " + String(z)));
   }
 }
 
