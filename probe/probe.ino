@@ -42,6 +42,10 @@ void app_main() {
   app.repeat(LIGHT_SAMPLING_INTERVAL, sampleLight);
 #endif
 
+#ifdef ANALOG_LIGHT
+  app.repeat(LIGHT_SAMPLING_INTERVAL, sampleAnalogLight);
+#endif
+
 #ifdef MICROPHONE
   level.begin();
   if (!I2S.begin(I2S_PHILIPS_MODE, 16000, 32)) {
@@ -87,8 +91,8 @@ void loop_main() {
 }
 
 /*
- * LIGHT SAMPLING
- * --------------
+ * DIGITAL LIGHT SAMPLING
+ * ----------------------
  */
 
 #ifdef DIGITAL_LIGHT
@@ -104,6 +108,31 @@ void sampleLight() {
   oldLightLevel = lightLevel;
 }
 #endif
+
+/*
+ * DIGITAL LIGHT SAMPLING
+ * ----------------------
+ */
+
+#ifdef ANALOG_LIGHT
+int oldAnalogLightLevel = 0;
+
+void sampleAnalogLight() {
+  analogRead(LIGHT_PIN);
+  int lightLevel = analogRead(LIGHT_PIN);
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/light-a: ");
+    Serial.println(lightLevel);
+  #endif
+  publishMessage("/light-a", String(lightLevel));
+  oldAnalogLightLevel = lightLevel;
+}
+#endif
+
+/*
+ * MICROPHONE SAMPLING
+ * -------------------
+ */
 
 #ifdef MICROPHONE
 
@@ -156,6 +185,12 @@ int sample() {
   return (maxsample - minsample);
 }
 #endif
+
+
+/*
+ * MOTION SAMPLING
+ * ---------------
+ */
 
 #ifdef MOTION
 void sampleMotion() {
