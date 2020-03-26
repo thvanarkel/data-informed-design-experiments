@@ -108,11 +108,14 @@ void sampleLight() {
 #ifdef MICROPHONE
 
 void sampleSound() {
+  int l = level.getAvg();
+  l = constrain(l, 0, 32767);
   #ifdef DEBUG_MESSAGE
     Serial.print("/sound: ");
-    Serial.println(level.getAvg());
+    Serial.println(l);
   #endif
-  publishMessage("/sound", String(level.getAvg()));
+  
+  publishMessage("/sound", String(l));
 }
 
 int sample() {
@@ -133,7 +136,6 @@ int sample() {
         nSamples++;
       }
     }
-    
   }
   float meanval;
   for (int i = 0; i < SAMPLES; i++) {
