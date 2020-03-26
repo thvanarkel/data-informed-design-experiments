@@ -124,7 +124,7 @@ const insertReading = function(topic, payload) {
   const point = new Point(els[2])
     .tag('thing', thingName)
     .timestamp(time)
-  if (payload.includes(',')) {
+  if (String(payload).includes(',')) {
     var v = payload.split(',')
     point.floatField('x', parseFloat(v[0]))
     point.floatField('y', parseFloat(v[1]))
