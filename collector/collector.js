@@ -123,8 +123,15 @@ const insertReading = function(topic, payload) {
 
   const point = new Point(els[2])
     .tag('thing', thingName)
-    .intField('value', parseInt(payload))
     .timestamp(time)
+  if (payload.contains(',')) {
+    var v = payload.split(',')
+    point.floatField('x', parseFloat(v[0]))
+    point.floatField('y', parseFloat(v[1]))
+    point.floatField('z', parseFloat(v[2]))
+  } else {
+    point.intField('value', parseInt(payload))
+  }
 
   points.push(point)
   // console.log(`${point}`)
@@ -162,5 +169,29 @@ const updateLog = function() {
   console.log(aLog)
 }
 
+
+
+// const sendEvent = function() {
+//   var events = ["alarm", "shake", "cooldown", "rise", "dormant"]
+//   var number = Math.floor(Math.random() * events.length)
+//   const point = new Point('anevent')
+//     .tag('thing', 'sleeplight')
+//     .tag('stringvalue', events[number])
+//     .intField('value', (number+1))
+//
+//
+//   writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
+//   writeApi.useDefaultTags({location: hostname()})
+//   writeApi.writePoint(point)
+//   writeApi
+//     .close()
+//     .then(() => {
+//       // console.log("pushed " + this.points.length + " to online database")
+//       // aLog.toOnline = aLog.toOnline + this.points.length;
+//     })
+//   console.log(`${point}`)
+// }
+
 setInterval(update, 5000);
 // setInterval(updateLog, 1000);
+// setInterval(sendEvent, 1000);
