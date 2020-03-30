@@ -28,7 +28,7 @@ int *I2Svalues = (int *) buffer;
 #include <Digital_Light_TSL2561.h>
 #endif
 
-#ifdef TIME_OF_FLIGHT 
+#ifdef TIME_OF_FLIGHT
 #include "Seeed_vl53l0x.h"
 Seeed_vl53l0x VL53L0X;
 #endif
@@ -104,6 +104,14 @@ void app_main() {
 
   app.onTick(loop_main);
   int countdownMS = Watchdog.enable(4000);
+  /*  Publish the cause of the last reset
+   *  1: Power On Reset
+   *  2: Brown Out 12 Detector Reset
+   *  4: Brown Out 33 Detector Reset
+   *  16:External Reset
+   *  32:Watchdog Reset
+   *  64:System Reset Request
+   */
   publishMessage("/system/reset", String(Watchdog.resetCause()));
 }
 
