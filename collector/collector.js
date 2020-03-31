@@ -121,6 +121,8 @@ const insertReading = function(topic, payload) {
   thingName = els[1];
   time = String(new Date().getTime());
 
+  var data = JSON.parse(payload)
+
   const point = new Point(els[2])
     .tag('thing', thingName)
     .timestamp(time)
@@ -134,9 +136,8 @@ const insertReading = function(topic, payload) {
       point.intField(key, value); // TODO: select the right type
     }
   }
-
   points.push(point)
-  // console.log(`${point}`)
+  console.log(`${point}`)
 
   // // Create Reading
   const reading = new Reading(time, topic, payload);
@@ -180,32 +181,9 @@ const sendEvent = function() {
 
   var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}" }}`
 
-  // turn JSON response into dictionary
-  var data = JSON.parse(json);
-
-  const point = new Point('system-event')
-
-  if ("tags" in data) {
-    for (const [key, value] of Object.entries(data.tags)) {
-      point.tag(key, value);
-    }
-  }
-  for (const [key, value] of Object.entries(data.fields)) {
-    point.intField(key, value);
-  }
-
-  writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
-  writeApi.useDefaultTags({location: hostname()})
-  writeApi.writePoint(point)
-  writeApi
-    .close()
-    .then(() => {
-      // console.log("pushed " + this.points.length + " to online database")
-      // aLog.toOnline = aLog.toOnline + this.points.length;
-    })
-  console.log(`${point}`)
+  insertReading("/computer/system", json)
 }
 
-// setInterval(update, 5000);
+setInterval(update, 5000);
 // setInterval(updateLog, 1000);
 setInterval(sendEvent, 1000);
