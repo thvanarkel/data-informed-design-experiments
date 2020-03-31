@@ -14,7 +14,7 @@ WiFiClient net;
 MQTTClient client;
 
 boolean brokerReconnect = false;
-boolean wifiReconnect = false;
+boolean networkReconnect = false;
 
 #ifdef MICROPHONE
 #include <I2S.h>
@@ -115,9 +115,32 @@ void app_main() {
    *  32:Watchdog Reset
    *  64:System Reset Request
    */
-  String tags[][2] = {{"type", "reset"}, {"event", "watchdog"}};
+  String tags[][2] = {{"event", "reset"}, {"cause", resetType(Watchdog.resetCause())}};
   String fields[][2] = {{"value", String(Watchdog.resetCause())}};
   publishMessage("/system/reset", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+}
+
+String resetType(int cause) {
+  switch(cause) {
+    case 1: 
+      return "power-on";
+      break;
+    case 2:
+      return "brown-out-12";
+      break;
+    case 4:
+      return "brown-out-33";
+      break;
+    case 16:
+      return "external-reset";
+      break;
+    case 32:
+      return "watchdog-reset";
+      break;
+    case 64:
+      return "system-reset-request";
+      break;
+  }
 }
 
 Reactduino app(app_main);
@@ -132,7 +155,7 @@ void loop_main() {
 
   if (!client.connected()) {
     if (WiFi.status() != WL_CONNECTED) {
-      wifiReconnect = true;
+      networkReconnect = true;
     } else {
       brokerReconnect = true;
     }
@@ -186,7 +209,6 @@ void sampleAnalogLight() {
   Serial.print("/light-a: ");
   Serial.println(lightLevel);
 #endif
-//  publishMessage("/light-a", String("{\"fields\":{\"value\":\"" + String(lightLevel) + "\"}}"));
   String tags[][2] = {};
   String fields[][2] = {{"value", String(lightLevel)}};
   publishMessage("/light-a", tags,  ArrayCount(tags), fields, ArrayCount(fields));
@@ -263,7 +285,6 @@ void sampleMotion() {
   Serial.print("/motion: ");
   Serial.println(val);
 #endif
-//  publishMessage("/motion", String("{\"fields\":{\"value\":\"" + String(val) + "\"}}"));
   String tags[][2] = {};
   String fields[][2] = {{"value", String(val)}};
   publishMessage("/motion", tags,  ArrayCount(tags), fields, ArrayCount(fields));
@@ -351,8 +372,6 @@ void sampleGyro() {
  * ---------------------
  */
 
-
-
 void publishMessage(String topic, String tags[][2], uint16_t nTags, String fields[][2], uint16_t nFields) {
   String payload = "{";
   if (nTags > 0) {
@@ -391,7 +410,6 @@ void connect() {
       ticks = 0;
     }
   }
-
   Serial.print("\nconnecting...");
   while (!client.connect(THING_NAME, SECRET_USERNAME, SECRET_PASSWORD)) {
     Serial.print(".");
@@ -404,11 +422,11 @@ void connect() {
    * 1: WiFi reconnect
    * 2: Broker reconnect
    */
-  if (wifiReconnect) {
-    String tags[][2] = {{"event", "reconnect-wifi"}};
+  if (networkReconnect) {
+    String tags[][2] = {{"event", "reconnect-network"}};
     String fields[][2] = {{"value", String(1)}};
     publishMessage("/system", tags,  ArrayCount(tags), fields, ArrayCount(fields));
-    wifiReconnect = false;
+    networkReconnect = false;
   }
   if (brokerReconnect) {
     String tags[][2] = {{"event", "reconnect-broker"}};
