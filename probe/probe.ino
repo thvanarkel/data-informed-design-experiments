@@ -13,6 +13,9 @@ const char pass[] = SECRET_PASS;
 WiFiClient net;
 MQTTClient client;
 
+boolean brokerReconnect = false;
+boolean wifiReconnect = false;
+
 #ifdef MICROPHONE
 #include <I2S.h>
 #include <movingAvg.h>
@@ -128,6 +131,11 @@ void loop_main() {
   client.loop();
 
   if (!client.connected()) {
+    if (WiFi.status() != WL_CONNECTED) {
+      wifiReconnect = true;
+    } else {
+      brokerReconnect = true;
+    }
     connect();
   }
 
@@ -390,4 +398,22 @@ void connect() {
     delay(1000);
   }
   Serial.println("\nconnected!");
+  
+  /*
+   * Reconnect codes:
+   * 1: WiFi reconnect
+   * 2: Broker reconnect
+   */
+  if (wifiReconnect) {
+    String tags[][2] = {{"event", "reconnect-wifi"}};
+    String fields[][2] = {{"value", String(1)}};
+    publishMessage("/system", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+    wifiReconnect = false;
+  }
+  if (brokerReconnect) {
+    String tags[][2] = {{"event", "reconnect-broker"}};
+    String fields[][2] = {{"value", String(2)}};
+    publishMessage("/system", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+    brokerReconnect = false;
+  }
 }
