@@ -112,7 +112,7 @@ void app_main() {
    *  32:Watchdog Reset
    *  64:System Reset Request
    */
-  publishMessage("/system/reset", String(Watchdog.resetCause()));
+  publishMessage("/system/reset", String("{\"fields\":{\"value\":\"" + String(Watchdog.resetCause()) + "\"}}"));
 }
 
 Reactduino app(app_main);
@@ -154,7 +154,7 @@ void sampleLight() {
   Serial.print("/light: ");
   Serial.println(lightLevel);
 #endif
-  publishMessage("/light", String(lightLevel));
+  publishMessage("/light", String("{\"fields\":{\"value\":\"" + String(lightLevel) + "\"}}"));
   oldLightLevel = lightLevel;
 }
 #endif
@@ -174,7 +174,7 @@ void sampleAnalogLight() {
   Serial.print("/light-a: ");
   Serial.println(lightLevel);
 #endif
-  publishMessage("/light-a", String(lightLevel));
+  publishMessage("/light-a", String("{\"fields\":{\"value\":\"" + String(lightLevel) + "\"}}"));
   oldAnalogLightLevel = lightLevel;
 }
 #endif
@@ -194,7 +194,7 @@ void sampleSound() {
   Serial.println(l);
 #endif
 
-  publishMessage("/sound", String(l));
+  publishMessage("/sound", String("{\"fields\":{\"value\":\"" + String(l) + "\"}}"));
 }
 
 int sample() {
@@ -246,7 +246,7 @@ void sampleMotion() {
   Serial.print("/motion: ");
   Serial.println(val);
 #endif
-  publishMessage("/motion", String(val));
+  publishMessage("/motion", String("{\"fields\":{\"value\":\"" + String(val) + "\"}}"));
 }
 
 #endif
@@ -271,7 +271,7 @@ void sampleToF() {
         Serial.print("/distance: ");
         Serial.println(RangingMeasurementData.RangeMilliMeter);
       #endif
-      publishMessage("/distance", String(RangingMeasurementData.RangeMilliMeter));
+      publishMessage("/distance", String("{\"fields\":{\"value\":\"" + String(RangingMeasurementData.RangeMilliMeter) + "\"}}"));
     }
   }
 }
@@ -293,7 +293,7 @@ void sampleAcceleration() {
     Serial.print("/acceleration: ");
     Serial.println(String(x) + ", " + String(y) + ", " + String(z));
   #endif
-    publishMessage("/acceleration", String(String(x) + ", " + String(y) + ", " + String(z)));
+    publishMessage("/acceleration", String("{\"fields\":{\"x\":\"" + String(x) + "\", \"y\":\"" + String(y) + "\", \"z\":\"" + String(z) + "\"}}"));
   }
 }
 
@@ -314,7 +314,7 @@ void sampleGyro() {
     Serial.print("/orientation: ");
     Serial.println(String(x) + ", " + String(y) + ", " + String(z));
   #endif
-    publishMessage("/orientation", String(String(x) + ", " + String(y) + ", " + String(z)));
+    publishMessage("/orientation", String("{\"fields\":{\"x\":\"" + String(x) + "\", \"y\":\"" + String(y) + "\", \"z\":\"" + String(z) + "\"}}"));
   }
 }
 
