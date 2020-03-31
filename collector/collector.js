@@ -124,13 +124,15 @@ const insertReading = function(topic, payload) {
   const point = new Point(els[2])
     .tag('thing', thingName)
     .timestamp(time)
-  if (String(payload).includes(',')) {
-    var v = String(payload).split(',')
-    point.floatField('x', parseFloat(v[0]))
-    point.floatField('y', parseFloat(v[1]))
-    point.floatField('z', parseFloat(v[2]))
-  } else {
-    point.intField('value', parseInt(payload))
+  if ("tags" in data) {
+    for (const [key, value] of Object.entries(data.tags)) {
+      point.tag(key, value);
+    }
+  }
+  if ("fields" in data) {
+    for (const [key, value] of Object.entries(data.fields)) {
+      point.intField(key, value); // TODO: select the right type
+    }
   }
 
   points.push(point)
@@ -169,29 +171,41 @@ const updateLog = function() {
   console.log(aLog)
 }
 
+const sendEvent = function() {
+  // Fake data generation
+  var events = ["reset watchdog", "reconnect broker", "reconnect internet", "hardware reset"]
+  var number = Math.floor(Math.random() * events.length)
+  var event = events[number]
+  var index = number+1
 
+  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}" }}`
 
-// const sendEvent = function() {
-//   var events = ["alarm", "shake", "cooldown", "rise", "dormant"]
-//   var number = Math.floor(Math.random() * events.length)
-//   const point = new Point('anevent')
-//     .tag('thing', 'sleeplight')
-//     .tag('stringvalue', events[number])
-//     .intField('value', (number+1))
-//
-//
-//   writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
-//   writeApi.useDefaultTags({location: hostname()})
-//   writeApi.writePoint(point)
-//   writeApi
-//     .close()
-//     .then(() => {
-//       // console.log("pushed " + this.points.length + " to online database")
-//       // aLog.toOnline = aLog.toOnline + this.points.length;
-//     })
-//   console.log(`${point}`)
-// }
+  // turn JSON response into dictionary
+  var data = JSON.parse(json);
 
-setInterval(update, 5000);
+  const point = new Point('system-event')
+
+  if ("tags" in data) {
+    for (const [key, value] of Object.entries(data.tags)) {
+      point.tag(key, value);
+    }
+  }
+  for (const [key, value] of Object.entries(data.fields)) {
+    point.intField(key, value);
+  }
+
+  writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
+  writeApi.useDefaultTags({location: hostname()})
+  writeApi.writePoint(point)
+  writeApi
+    .close()
+    .then(() => {
+      // console.log("pushed " + this.points.length + " to online database")
+      // aLog.toOnline = aLog.toOnline + this.points.length;
+    })
+  console.log(`${point}`)
+}
+
+// setInterval(update, 5000);
 // setInterval(updateLog, 1000);
-// setInterval(sendEvent, 1000);
+setInterval(sendEvent, 1000);
