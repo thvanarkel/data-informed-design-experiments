@@ -133,7 +133,17 @@ const insertReading = function(topic, payload) {
   }
   if ("fields" in data) {
     for (const [key, value] of Object.entries(data.fields)) {
-      point.intField(key, value); // TODO: select the right type
+      if (value.slice(-1) === 'i') {
+        point.intField(key, value)
+      } else if (value === "true" || value === "false") {
+        console.log("bool!")
+        var v = value === "true"
+        point.booleanField(key, v)
+      } else if (parseFloat(value) !== NaN) {
+        point.floatField(key, value)
+      } else if (typeof value.slice(-1) === "string") {
+        point.stringField(key, value)
+      }
     }
   }
   points.push(point)
@@ -179,7 +189,7 @@ const sendEvent = function() {
   var event = events[number]
   var index = number+1
 
-  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}" }}`
+  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "1.9" }}` //"${index}i" }}`
 
   insertReading("/computer/system", json)
 }
