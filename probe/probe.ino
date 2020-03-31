@@ -423,13 +423,13 @@ void connect() {
    * 2: Broker reconnect
    */
   if (networkReconnect) {
-    String tags[][2] = {{"event", "reconnect-network"}};
+    String tags[][2] = {{"event", "reconnect"}, {"type", "network"}};
     String fields[][2] = {{"value", String(1)}};
     publishMessage("/system", tags,  ArrayCount(tags), fields, ArrayCount(fields));
     networkReconnect = false;
   }
   if (brokerReconnect) {
-    String tags[][2] = {{"event", "reconnect-broker"}};
+    String tags[][2] = {{"event", "reconnect"}, {"type", "broker"}};
     String fields[][2] = {{"value", String(2)}};
     publishMessage("/system", tags,  ArrayCount(tags), fields, ArrayCount(fields));
     brokerReconnect = false;
