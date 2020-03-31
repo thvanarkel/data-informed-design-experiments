@@ -1,13 +1,11 @@
 #include <Adafruit_SleepyDog.h>
 #include <Wire.h>
-#include <Digital_Light_TSL2561.h>
 #include <Reactduino.h>
 #include <WiFiNINA.h>
 #include <MQTT.h>
-#include <I2S.h>
-#include <movingAvg.h>
-
 #include "configuration.h"
+
+#define ArrayCount(x) (sizeof(x) / sizeof(x[0]))
 
 const char ssid[] = SECRET_SSID;
 const char pass[] = SECRET_PASS;
@@ -15,15 +13,32 @@ const char pass[] = SECRET_PASS;
 WiFiClient net;
 MQTTClient client;
 
+boolean brokerReconnect = false;
+boolean networkReconnect = false;
+
 #ifdef MICROPHONE
-  movingAvg level(128);
-  #define SAMPLES 128 // make it a power of two for best DMA performance
-  #define I2S_BUFFER_SIZE 512
-  uint8_t buffer[I2S_BUFFER_SIZE];
-  #define I2S_BITS_PER_SAMPLE 32
-  int *I2Svalues = (int *) buffer;
+#include <I2S.h>
+#include <movingAvg.h>
+movingAvg level(128);
+#define SAMPLES 128 // make it a power of two for best DMA performance
+#define I2S_BUFFER_SIZE 512
+uint8_t buffer[I2S_BUFFER_SIZE];
+#define I2S_BITS_PER_SAMPLE 32
+int *I2Svalues = (int *) buffer;
 #endif
 
+#ifdef DIGITAL_LIGHT
+#include <Digital_Light_TSL2561.h>
+#endif
+
+#ifdef TIME_OF_FLIGHT
+#include "Seeed_vl53l0x.h"
+Seeed_vl53l0x VL53L0X;
+#endif
+
+#if defined(ACCELEROMETER) || defined(GYROSCOPE)
+#include <Arduino_LSM6DS3.h>
+#endif
 
 /*
  *  SETUP
@@ -42,6 +57,10 @@ void app_main() {
   app.repeat(LIGHT_SAMPLING_INTERVAL, sampleLight);
 #endif
 
+#ifdef ANALOG_LIGHT
+  app.repeat(LIGHT_SAMPLING_INTERVAL, sampleAnalogLight);
+#endif
+
 #ifdef MICROPHONE
   level.begin();
   if (!I2S.begin(I2S_PHILIPS_MODE, 16000, 32)) {
@@ -56,9 +75,72 @@ void app_main() {
   app.repeat(MOTION_SAMPLING_INTERVAL, sampleMotion);
 #endif
 
+#ifdef TIME_OF_FLIGHT
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+  Status = VL53L0X.VL53L0X_common_init();
+  if (VL53L0X_ERROR_NONE != Status) {
+    Serial.println("start vl53l0x mesurement failed!");
+    VL53L0X.print_pal_error(Status);
+    while (1);
+  }
+  VL53L0X.VL53L0X_single_ranging_init();
+  if (VL53L0X_ERROR_NONE != Status) {
+    Serial.println("start vl53l0x mesurement failed!");
+    VL53L0X.print_pal_error(Status);
+    while (1);
+  }
+  app.repeat(ToF_SAMPLING_INTERVAL, sampleToF);
+#endif
+
+#if defined(ACCELEROMETER) || defined(GYROSCOPE)
+  if (!IMU.begin()) {
+    Serial.println("Failed to initialize IMU!");
+    while (1);
+  }
+#endif
+#ifdef ACCELEROMETER
+  app.repeat(ACCELEROMETER_SAMPLING_INTERVAL, sampleAcceleration);
+#endif
+#ifdef GYROSCOPE
+  app.repeat(GYROSCOPE_SAMPLING_INTERVAL, sampleGyro);
+#endif
+
   app.onTick(loop_main);
   int countdownMS = Watchdog.enable(4000);
-  publishMessage("/system/reset", String(Watchdog.resetCause()));
+  /*  Publish the cause of the last reset
+   *  1: Power On Reset
+   *  2: Brown Out 12 Detector Reset
+   *  4: Brown Out 33 Detector Reset
+   *  16:External Reset
+   *  32:Watchdog Reset
+   *  64:System Reset Request
+   */
+  String tags[][2] = {{"event", "reset"}, {"cause", resetType(Watchdog.resetCause())}};
+  String fields[][2] = {{"value", String(Watchdog.resetCause())}};
+  publishMessage("/system/reset", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+}
+
+String resetType(int cause) {
+  switch(cause) {
+    case 1: 
+      return "power-on";
+      break;
+    case 2:
+      return "brown-out-12";
+      break;
+    case 4:
+      return "brown-out-33";
+      break;
+    case 16:
+      return "external-reset";
+      break;
+    case 32:
+      return "watchdog-reset";
+      break;
+    case 64:
+      return "system-reset-request";
+      break;
+  }
 }
 
 Reactduino app(app_main);
@@ -72,23 +154,28 @@ void loop_main() {
   client.loop();
 
   if (!client.connected()) {
+    if (WiFi.status() != WL_CONNECTED) {
+      networkReconnect = true;
+    } else {
+      brokerReconnect = true;
+    }
     connect();
   }
 
 #ifdef MICROPHONE;
   int reading = sample() - MICROPHONE_BASELINE;
   level.reading(reading);
-  #ifdef DEBUG_AUDIO;
+#ifdef DEBUG_AUDIO;
   Serial.print(reading);
   Serial.print(" ");
   Serial.println(level.getAvg());
-  #endif;
+#endif;
 #endif;
 }
 
 /*
- * LIGHT SAMPLING
- * --------------
+ * DIGITAL LIGHT SAMPLING
+ * ----------------------
  */
 
 #ifdef DIGITAL_LIGHT
@@ -96,26 +183,57 @@ int oldLightLevel = 0;
 
 void sampleLight() {
   int lightLevel = TSL2561.readVisibleLux();
-  #ifdef DEBUG_MESSAGE
-    Serial.print("/light: ");
-    Serial.println(lightLevel);
-  #endif
-  publishMessage("/light", String(lightLevel));
+#ifdef DEBUG_MESSAGE
+  Serial.print("/light: ");
+  Serial.println(lightLevel);
+#endif
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(lightLevel)}};
+  publishMessage("/light", tags,  ArrayCount(tags), fields, ArrayCount(fields));
   oldLightLevel = lightLevel;
 }
 #endif
+
+/*
+ * ANALOG LIGHT SAMPLING
+ * ---------------------
+ */
+
+#ifdef ANALOG_LIGHT
+int oldAnalogLightLevel = 0;
+
+void sampleAnalogLight() {
+  analogRead(LIGHT_PIN);
+  int lightLevel = analogRead(LIGHT_PIN);
+#ifdef DEBUG_MESSAGE
+  Serial.print("/light-a: ");
+  Serial.println(lightLevel);
+#endif
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(lightLevel)}};
+  publishMessage("/light-a", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+  oldAnalogLightLevel = lightLevel;
+}
+#endif
+
+/*
+ * MICROPHONE SAMPLING
+ * -------------------
+ */
 
 #ifdef MICROPHONE
 
 void sampleSound() {
   int l = level.getAvg();
   l = constrain(l, 0, 32767);
-  #ifdef DEBUG_MESSAGE
-    Serial.print("/sound: ");
-    Serial.println(l);
-  #endif
-  
-  publishMessage("/sound", String(l));
+#ifdef DEBUG_MESSAGE
+  Serial.print("/sound: ");
+  Serial.println(l);
+#endif
+
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(l)}};
+  publishMessage("/sound", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
 
 int sample() {
@@ -128,7 +246,7 @@ int sample() {
   while (nSamples < SAMPLES) {
     I2S.read(buffer, I2S_BUFFER_SIZE);
     for (int i = 0; i < I2S_BITS_PER_SAMPLE; i++) {
-      if ((I2Svalues[i]!= 0) && (I2Svalues[i] != -1)) {
+      if ((I2Svalues[i] != 0) && (I2Svalues[i] != -1)) {
         I2Svalues[i] >>= 14;
         if (nSamples < SAMPLES) {
           samples[nSamples] = I2Svalues[i];
@@ -139,36 +257,144 @@ int sample() {
   }
   float meanval;
   for (int i = 0; i < SAMPLES; i++) {
-    
+
     meanval += samples[i];
   }
   meanval /= SAMPLES;
   for (int i = 0; i < SAMPLES; i++) {
-     samples[i] += meanval;
+    samples[i] += meanval;
   }
   for (int i = 0; i < SAMPLES; i++) {
-     minsample = min(minsample, abs(samples[i]));
-     maxsample = max(maxsample, abs(samples[i]));
-  }  
-//  Serial.print((maxsample - minsample) - MICROPHONE_BASELINE);
-//  Serial.print(" ");
-//  Serial.print(level.getAvg());
+    minsample = min(minsample, abs(samples[i]));
+    maxsample = max(maxsample, abs(samples[i]));
+  }
   return (maxsample - minsample);
 }
 #endif
 
+/*
+ * MOTION SAMPLING
+ * ---------------
+ */
+
 #ifdef MOTION
+
 void sampleMotion() {
   int val = digitalRead(MOTION_PIN);
-  #ifdef DEBUG_MESSAGE
-    Serial.print("/motion: ");
-    Serial.println(val);
-  #endif
-  publishMessage("/motion", String(val));
+#ifdef DEBUG_MESSAGE
+  Serial.print("/motion: ");
+  Serial.println(val);
+#endif
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(val)}};
+  publishMessage("/motion", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
+
 #endif
 
-void publishMessage(String topic, String payload) {
+/*
+ * TIME_OF_FLIGHT SAMPLING
+ * -----------------------
+ */
+
+#ifdef TIME_OF_FLIGHT
+void sampleToF() {
+  VL53L0X_RangingMeasurementData_t RangingMeasurementData;
+  VL53L0X_Error Status = VL53L0X_ERROR_NONE;
+
+  memset(&RangingMeasurementData, 0, sizeof(VL53L0X_RangingMeasurementData_t));
+  Status = VL53L0X.PerformSingleRangingMeasurement(&RangingMeasurementData);
+  if (VL53L0X_ERROR_NONE == Status) {
+    if (RangingMeasurementData.RangeMilliMeter >= 2000) {
+      Serial.println("out of range!!");
+    } else {
+      #ifdef DEBUG_MESSAGE
+        Serial.print("/distance: ");
+        Serial.println(RangingMeasurementData.RangeMilliMeter);
+      #endif
+        String tags[][2] = {};
+        String fields[][2] = {{"value", String(RangingMeasurementData.RangeMilliMeter)}};
+        publishMessage("/distance", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+    }
+  }
+}
+
+#endif
+
+/*
+ * ACCELERATION SAMPLING
+ * ---------------------
+ */
+
+#ifdef ACCELEROMETER
+
+void sampleAcceleration() {
+  float x, y, z;
+  if (IMU.accelerationAvailable()) {
+    IMU.readAcceleration(x, y, z);
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/acceleration: ");
+    Serial.println(String(x) + ", " + String(y) + ", " + String(z));
+  #endif
+    String tags[][2] = {};
+    String fields[][2] = {{"x", String(x)}, {"y", String(y)}, {"z", String(z)}};
+    publishMessage("/acceleration", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+  }
+}
+
+#endif
+
+/*
+ * GYRO SAMPLING
+ * ---------------------
+ */
+
+#ifdef GYROSCOPE
+
+void sampleGyro() {
+  float x, y, z;
+  if (IMU.gyroscopeAvailable()) {
+    IMU.readGyroscope(x, y, z);
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/orientation: ");
+    Serial.println(String(x) + ", " + String(y) + ", " + String(z));
+  #endif
+    String tags[][2] = {};
+    String fields[][2] = {{"x", String(x)}, {"y", String(y)}, {"z", String(z)}};
+    publishMessage("/orientation", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+  }
+}
+
+#endif
+
+/*
+ * CONNECTIVITY HANDLING
+ * ---------------------
+ */
+
+void publishMessage(String topic, String tags[][2], uint16_t nTags, String fields[][2], uint16_t nFields) {
+  String payload = "{";
+  if (nTags > 0) {
+    payload += "\"tags\":{";
+    for (int i = 0; i < nTags; i++) {
+      payload += "\"" + tags[i][0] +"\":\""+ tags[i][1] + "\"";
+      if (i < (nTags - 1)) payload += ",";
+    }
+    payload += "}";
+    if (nFields > 0) payload += ",";
+  }
+  if (nFields > 0) {
+    payload += "\"fields\":{";
+    for (int i = 0; i < nFields; i++) {
+      payload += "\"" + fields[i][0] +"\":\""+ fields[i][1] + "\"";
+      if (i < (nFields - 1)) payload += ",";
+    }
+    payload += "}";
+  } else {
+    return;
+  }
+  payload += "}";
+  
   client.publish(String("/") + THING_NAME + topic, payload);
 }
 
@@ -184,11 +410,28 @@ void connect() {
       ticks = 0;
     }
   }
-
   Serial.print("\nconnecting...");
   while (!client.connect(THING_NAME, SECRET_USERNAME, SECRET_PASSWORD)) {
     Serial.print(".");
     delay(1000);
   }
   Serial.println("\nconnected!");
+  
+  /*
+   * Reconnect codes:
+   * 1: WiFi reconnect
+   * 2: Broker reconnect
+   */
+  if (networkReconnect) {
+    String tags[][2] = {{"event", "reconnect"}, {"type", "network"}};
+    String fields[][2] = {{"value", String(1)}};
+    publishMessage("/system", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+    networkReconnect = false;
+  }
+  if (brokerReconnect) {
+    String tags[][2] = {{"event", "reconnect"}, {"type", "broker"}};
+    String fields[][2] = {{"value", String(2)}};
+    publishMessage("/system", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+    brokerReconnect = false;
+  }
 }
