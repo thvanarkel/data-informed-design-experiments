@@ -133,21 +133,32 @@ const insertReading = function(topic, payload) {
     for (const [key, value] of Object.entries(data.fields)) {
       if (value.slice(-1) === 'i') {
         point.intField(key, value)
+        data.fields.value = value.slice(0, -1)
       } else if (value === "true" || value === "false") {
-        console.log("bool!")
         var v = value === "true"
         point.booleanField(key, v)
-      } else if (parseFloat(value) !== NaN) {
+      } else if (!Number.isNaN(parseFloat(value))) {
         point.floatField(key, value)
       } else if (typeof value.slice(-1) === "string") {
         point.stringField(key, value)
       }
     }
   }
-  console.log(`${point}`)
+  var val = "";
+  for (const [key, value] of Object.entries(data.fields)) {
+    if (Object.entries(data.fields).length > 1) {
+      val += `${key}=${value},`
+    } else {
+      val += `${value}`
+    }
+  }
+  if (Object.entries(data.fields).length > 1) {
+    val = val.slice(0, -1)
+  }
+  console.log(val)
 
   // // Create Reading
-  const reading = new Reading(time, topic, payload);
+  const reading = new Reading(time, topic, val);
 
   var thing = things.find(thing => thing.name === thingName)
   if (!thing) {
@@ -186,7 +197,7 @@ const sendEvent = function() {
   var event = events[number]
   var index = number+1
 
-  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}i" }}`
+  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}i"}}`
 
   insertReading("/computer/system", json)
 }
