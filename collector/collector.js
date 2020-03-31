@@ -10,8 +10,6 @@ const directory = require('os').homedir() + '/Documents/sensor-data';
 
 const dbClient = new InfluxDB({url: process.env.HOST, token: process.env.TOKEN})
 
-var points = [];
-
 var aLog = {
   collected: 0,
   toDisk: 0,
@@ -146,7 +144,6 @@ const insertReading = function(topic, payload) {
       }
     }
   }
-  points.push(point)
   console.log(`${point}`)
 
   // // Create Reading
@@ -189,7 +186,7 @@ const sendEvent = function() {
   var event = events[number]
   var index = number+1
 
-  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "1.9" }}` //"${index}i" }}`
+  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}i" }}`
 
   insertReading("/computer/system", json)
 }
