@@ -10,8 +10,6 @@ const directory = require('os').homedir() + '/Documents/sensor-data';
 
 const dbClient = new InfluxDB({url: process.env.HOST, token: process.env.TOKEN})
 
-var points = [];
-
 var aLog = {
   collected: 0,
   toDisk: 0,
@@ -121,23 +119,46 @@ const insertReading = function(topic, payload) {
   thingName = els[1];
   time = String(new Date().getTime());
 
+  var data = JSON.parse(payload)
+
   const point = new Point(els[2])
     .tag('thing', thingName)
     .timestamp(time)
-  if (String(payload).includes(',')) {
-    var v = String(payload).split(',')
-    point.floatField('x', parseFloat(v[0]))
-    point.floatField('y', parseFloat(v[1]))
-    point.floatField('z', parseFloat(v[2]))
-  } else {
-    point.intField('value', parseInt(payload))
+  if ("tags" in data) {
+    for (const [key, value] of Object.entries(data.tags)) {
+      point.tag(key, value);
+    }
   }
-
-  points.push(point)
-  // console.log(`${point}`)
+  if ("fields" in data) {
+    for (const [key, value] of Object.entries(data.fields)) {
+      if (value.slice(-1) === 'i') {
+        point.intField(key, value)
+        data.fields.value = value.slice(0, -1)
+      } else if (value === "true" || value === "false") {
+        var v = value === "true"
+        point.booleanField(key, v)
+      } else if (!Number.isNaN(parseFloat(value))) {
+        point.floatField(key, value)
+      } else if (typeof value.slice(-1) === "string") {
+        point.stringField(key, value)
+      }
+    }
+  }
+  var val = "";
+  for (const [key, value] of Object.entries(data.fields)) {
+    if (Object.entries(data.fields).length > 1) {
+      val += `${key}=${value},`
+    } else {
+      val += `${value}`
+    }
+  }
+  if (Object.entries(data.fields).length > 1) {
+    val = val.slice(0, -1)
+  }
+  console.log(val)
 
   // // Create Reading
-  const reading = new Reading(time, topic, payload);
+  const reading = new Reading(time, topic, val);
 
   var thing = things.find(thing => thing.name === thingName)
   if (!thing) {
@@ -169,29 +190,18 @@ const updateLog = function() {
   console.log(aLog)
 }
 
+const sendEvent = function() {
+  // Fake data generation
+  var events = ["reset watchdog", "reconnect broker", "reconnect internet", "hardware reset"]
+  var number = Math.floor(Math.random() * events.length)
+  var event = events[number]
+  var index = number+1
 
+  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}i"}}`
 
-// const sendEvent = function() {
-//   var events = ["alarm", "shake", "cooldown", "rise", "dormant"]
-//   var number = Math.floor(Math.random() * events.length)
-//   const point = new Point('anevent')
-//     .tag('thing', 'sleeplight')
-//     .tag('stringvalue', events[number])
-//     .intField('value', (number+1))
-//
-//
-//   writeApi = dbClient.getWriteApi(process.env.ORG, process.env.BUCKET, 'ms')
-//   writeApi.useDefaultTags({location: hostname()})
-//   writeApi.writePoint(point)
-//   writeApi
-//     .close()
-//     .then(() => {
-//       // console.log("pushed " + this.points.length + " to online database")
-//       // aLog.toOnline = aLog.toOnline + this.points.length;
-//     })
-//   console.log(`${point}`)
-// }
+  insertReading("/computer/system", json)
+}
 
 setInterval(update, 5000);
 // setInterval(updateLog, 1000);
-// setInterval(sendEvent, 1000);
+setInterval(sendEvent, 1000);
