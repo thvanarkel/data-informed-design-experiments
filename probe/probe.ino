@@ -3,9 +3,9 @@
 #include <Reactduino.h>
 #include <WiFiNINA.h>
 #include <MQTT.h>
-
-
 #include "configuration.h"
+
+#define ArrayCount(x) (sizeof(x) / sizeof(x[0]))
 
 const char ssid[] = SECRET_SSID;
 const char pass[] = SECRET_PASS;
@@ -112,7 +112,9 @@ void app_main() {
    *  32:Watchdog Reset
    *  64:System Reset Request
    */
-  publishMessage("/system/reset", String("{\"fields\":{\"value\":\"" + String(Watchdog.resetCause()) + "\"}}"));
+  String tags[][2] = {{"type", "reset"}, {"event", "watchdog"}};
+  String fields[][2] = {{"value", String(Watchdog.resetCause())}};
+  publishMessage("/system/reset", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
 
 Reactduino app(app_main);
@@ -154,7 +156,9 @@ void sampleLight() {
   Serial.print("/light: ");
   Serial.println(lightLevel);
 #endif
-  publishMessage("/light", String("{\"fields\":{\"value\":\"" + String(lightLevel) + "\"}}"));
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(lightLevel)}};
+  publishMessage("/light", tags,  ArrayCount(tags), fields, ArrayCount(fields));
   oldLightLevel = lightLevel;
 }
 #endif
@@ -174,7 +178,10 @@ void sampleAnalogLight() {
   Serial.print("/light-a: ");
   Serial.println(lightLevel);
 #endif
-  publishMessage("/light-a", String("{\"fields\":{\"value\":\"" + String(lightLevel) + "\"}}"));
+//  publishMessage("/light-a", String("{\"fields\":{\"value\":\"" + String(lightLevel) + "\"}}"));
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(lightLevel)}};
+  publishMessage("/light-a", tags,  ArrayCount(tags), fields, ArrayCount(fields));
   oldAnalogLightLevel = lightLevel;
 }
 #endif
@@ -194,7 +201,9 @@ void sampleSound() {
   Serial.println(l);
 #endif
 
-  publishMessage("/sound", String("{\"fields\":{\"value\":\"" + String(l) + "\"}}"));
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(l)}};
+  publishMessage("/sound", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
 
 int sample() {
@@ -246,7 +255,10 @@ void sampleMotion() {
   Serial.print("/motion: ");
   Serial.println(val);
 #endif
-  publishMessage("/motion", String("{\"fields\":{\"value\":\"" + String(val) + "\"}}"));
+//  publishMessage("/motion", String("{\"fields\":{\"value\":\"" + String(val) + "\"}}"));
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(val)}};
+  publishMessage("/motion", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
 
 #endif
@@ -271,7 +283,9 @@ void sampleToF() {
         Serial.print("/distance: ");
         Serial.println(RangingMeasurementData.RangeMilliMeter);
       #endif
-      publishMessage("/distance", String("{\"fields\":{\"value\":\"" + String(RangingMeasurementData.RangeMilliMeter) + "\"}}"));
+        String tags[][2] = {};
+        String fields[][2] = {{"value", String(RangingMeasurementData.RangeMilliMeter)}};
+        publishMessage("/distance", tags,  ArrayCount(tags), fields, ArrayCount(fields));
     }
   }
 }
@@ -293,7 +307,9 @@ void sampleAcceleration() {
     Serial.print("/acceleration: ");
     Serial.println(String(x) + ", " + String(y) + ", " + String(z));
   #endif
-    publishMessage("/acceleration", String("{\"fields\":{\"x\":\"" + String(x) + "\", \"y\":\"" + String(y) + "\", \"z\":\"" + String(z) + "\"}}"));
+    String tags[][2] = {};
+    String fields[][2] = {{"x", String(x)}, {"y", String(y)}, {"z", String(z)}};
+    publishMessage("/acceleration", tags,  ArrayCount(tags), fields, ArrayCount(fields));
   }
 }
 
@@ -314,7 +330,9 @@ void sampleGyro() {
     Serial.print("/orientation: ");
     Serial.println(String(x) + ", " + String(y) + ", " + String(z));
   #endif
-    publishMessage("/orientation", String("{\"fields\":{\"x\":\"" + String(x) + "\", \"y\":\"" + String(y) + "\", \"z\":\"" + String(z) + "\"}}"));
+    String tags[][2] = {};
+    String fields[][2] = {{"x", String(x)}, {"y", String(y)}, {"z", String(z)}};
+    publishMessage("/orientation", tags,  ArrayCount(tags), fields, ArrayCount(fields));
   }
 }
 
@@ -325,7 +343,31 @@ void sampleGyro() {
  * ---------------------
  */
 
-void publishMessage(String topic, String payload) {
+
+
+void publishMessage(String topic, String tags[][2], uint16_t nTags, String fields[][2], uint16_t nFields) {
+  String payload = "{";
+  if (nTags > 0) {
+    payload += "\"tags\":{";
+    for (int i = 0; i < nTags; i++) {
+      payload += "\"" + tags[i][0] +"\":\""+ tags[i][1] + "\"";
+      if (i < (nTags - 1)) payload += ",";
+    }
+    payload += "}";
+    if (nFields > 0) payload += ",";
+  }
+  if (nFields > 0) {
+    payload += "\"fields\":{";
+    for (int i = 0; i < nFields; i++) {
+      payload += "\"" + fields[i][0] +"\":\""+ fields[i][1] + "\"";
+      if (i < (nFields - 1)) payload += ",";
+    }
+    payload += "}";
+  } else {
+    return;
+  }
+  payload += "}";
+  
   client.publish(String("/") + THING_NAME + topic, payload);
 }
 
