@@ -6,11 +6,11 @@ const csv = require('fast-csv')
 const {InfluxDB, Point, FluxTableMetaData} = require('@influxdata/influxdb-client')
 const {hostname} = require('os')
 
+const cron = require('node-cron');
+
 const directory = require('os').homedir() + '/Documents/sensor-data';
 
 const dbClient = new InfluxDB({url: process.env.HOST, token: process.env.TOKEN})
-
-var points = [];
 
 var aLog = {
   collected: 0,
@@ -98,6 +98,12 @@ class Thing {
   addPoint(point) {
     this.points.push(point);
   }
+
+  newFile() {
+    let date = dateString(new Date())
+    this.path = path.resolve(directory, `${this.name}-${date}.csv`)
+    this.created = fs.existsSync(this.path)
+  }
 }
 
 class Reading {
@@ -121,21 +127,52 @@ const insertReading = function(topic, payload) {
   thingName = els[1];
   time = String(new Date().getTime());
 
+  var data = JSON.parse(payload)
+
   const point = new Point(els[2])
     .tag('thing', thingName)
-    .intField('value', parseInt(payload))
     .timestamp(time)
-
-  points.push(point)
-  // console.log(`${point}`)
+  if ("tags" in data) {
+    for (const [key, value] of Object.entries(data.tags)) {
+      point.tag(key, value);
+    }
+  }
+  if ("fields" in data) {
+    for (const [key, value] of Object.entries(data.fields)) {
+      if (value.slice(-1) === 'i') {
+        point.intField(key, value)
+        data.fields.value = value.slice(0, -1)
+      } else if (value === "true" || value === "false") {
+        var v = value === "true"
+        point.booleanField(key, v)
+      } else if (!Number.isNaN(parseFloat(value))) {
+        point.floatField(key, value)
+      } else if (typeof value.slice(-1) === "string") {
+        point.stringField(key, value)
+      }
+    }
+  }
+  var val = "";
+  for (const [key, value] of Object.entries(data.fields)) {
+    if (Object.entries(data.fields).length > 1) {
+      val += `${key}=${value},`
+    } else {
+      val += `${value}`
+    }
+  }
+  if (Object.entries(data.fields).length > 1) {
+    val = val.slice(0, -1)
+  }
 
   // // Create Reading
-  const reading = new Reading(time, topic, payload);
+  const reading = new Reading(time, topic, val);
 
   var thing = things.find(thing => thing.name === thingName)
   if (!thing) {
+
+    let date = dateString(new Date());
     thing = new Thing({
-      path: path.resolve(directory, thingName + '.csv'),
+      path: path.resolve(directory, `${thingName}-${date}.csv`),
       // headers to write
       headers: ['stream', 'timestamp', 'value'],
       name: thingName
@@ -144,23 +181,61 @@ const insertReading = function(topic, payload) {
   }
   thing.addReading(reading);
   thing.addPoint(point);
-
   // aLog.collected = aLog.collected + 1;
+}
+
+var dateString = function(date) {
+  function pad(n){return n<10 ? '0'+n : n}
+  let d = pad(date.getDate());
+  let m = pad((date.getMonth()+1));
+  let y = date.getFullYear();
+  return `${y}${m}${d}`;
 }
 
 connect();
 
-const update = function () {
-  return new Promise(resolve => {
-    for (thing of things) {
-      thing.push();
-    }
-  });
-}
+// const update = function () {
+//   return new Promise(resolve => {
+//     for (thing of things) {
+//       thing.push();
+//     }
+//   });
+// }
 
 const updateLog = function() {
   console.log(aLog)
 }
 
-setInterval(update, 5000);
+var nEvents = 0;
+
+const sendEvent = function() {
+  // Fake data generation
+  var events = ["reset watchdog", "reconnect broker", "reconnect internet", "hardware reset"]
+  var number = Math.floor(Math.random() * events.length)
+  var event = events[number]
+  var index = number+1
+
+  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}i"}}`
+  nEvents++;
+  console.log(nEvents);
+
+  insertReading("/computer/system", json)
+}
+
+// setInterval(update, 5000);
 // setInterval(updateLog, 1000);
+setInterval(sendEvent, 500);
+
+var update = cron.schedule('*/5 * * * * *', () => {
+  new Promise(resolve => {
+    for (thing of things) {
+      thing.push();
+    }
+  });
+});
+
+var newFile = cron.schedule('0 0 * * *', () =>  {
+  for (thing of things) {
+    thing.newFile();
+  }
+});
