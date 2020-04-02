@@ -85,7 +85,8 @@ void app_main() {
   level.begin();
   if (!I2S.begin(I2S_PHILIPS_MODE, 16000, 32)) {
     Serial.println("Failed to initialize I2S!");
-    while (1); // do nothing
+    errorMessage("Failed to initialize I2S!");
+    while (1); // do nothing // TODO: change to error message
   }
   app.repeat(SOUND_SAMPLING_INTERVAL, sampleSound);
   I2S.read();
@@ -100,14 +101,14 @@ void app_main() {
   Status = VL53L0X.VL53L0X_common_init();
   if (VL53L0X_ERROR_NONE != Status) {
     Serial.println("start vl53l0x mesurement failed!");
+    errorMessage("start vl53l0x mesurement failed!")
     VL53L0X.print_pal_error(Status);
-    while (1);
   }
   VL53L0X.VL53L0X_single_ranging_init();
   if (VL53L0X_ERROR_NONE != Status) {
     Serial.println("start vl53l0x mesurement failed!");
+    errorMessage("start vl53l0x mesurement failed!");
     VL53L0X.print_pal_error(Status);
-    while (1);
   }
   app.repeat(TOF_SAMPLING_INTERVAL, sampleToF);
 #endif
@@ -116,7 +117,7 @@ void app_main() {
   Wire.begin();
   if (movementSensor.initialize() == false) {
     Serial.println("Device not found. Check wiring.");
-    while (1);
+    errorMessage("Device not found. Check wiring.");
   }
   app.repeat(PRESENCE_SAMPLING_INTERVAL, sendPresence);
 #endif;
@@ -124,7 +125,7 @@ void app_main() {
 #if defined(ACCELEROMETER) || defined(GYROSCOPE)
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
-    while (1);
+    errorMessage("Failed to initialize IMU!");
   }
 #endif
 #ifdef ACCELEROMETER
@@ -504,6 +505,12 @@ void publishMessage(String topic, String tags[][2], uint16_t nTags, String field
   payload += "}";
 
   client.publish(String("/") + THING_NAME + topic, payload);
+}
+
+void errorMessage(String text) {
+  String tags[][2] = {{"event", "error"}, {"thing", THING_NAME}};
+  String fields[][2] = {{"value", text}};
+  publishMessage("/system/error", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
 
 void connect(boolean networkReconnect, boolean brokerReconnect) {
