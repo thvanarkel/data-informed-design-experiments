@@ -198,24 +198,6 @@ const updateLog = function() {
   console.log(aLog)
 }
 
-var nEvents = 0;
-
-const sendEvent = function() {
-  // Fake data generation
-  var events = ["reset watchdog", "reconnect broker", "reconnect internet", "hardware reset"]
-  var number = Math.floor(Math.random() * events.length)
-  var event = events[number]
-  var index = number+1
-
-  var json = `{"tags":{"event":"${event}"}, "fields":{"value": "${index}i"}}`
-  nEvents++;
-  console.log(nEvents);
-
-  insertReading("/computer/system", json)
-}
-
-setInterval(sendEvent, 500);
-
 var update = cron.schedule('*/5 * * * * *', () => {
   new Promise(resolve => {
     for (thing of things) {
