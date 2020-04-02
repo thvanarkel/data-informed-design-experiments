@@ -77,6 +77,10 @@ void app_main() {
   app.repeat(LIGHT_SAMPLING_INTERVAL, sampleAnalogLight);
 #endif
 
+#ifdef TEMPERATURE
+  app.repeat(TEMPERATURE_SAMPLING_INTERVAL, sampleTemperature);
+#endif
+
 #ifdef MICROPHONE
   level.begin();
   if (!I2S.begin(I2S_PHILIPS_MODE, 16000, 32)) {
@@ -105,7 +109,7 @@ void app_main() {
     VL53L0X.print_pal_error(Status);
     while (1);
   }
-  app.repeat(ToF_SAMPLING_INTERVAL, sampleToF);
+  app.repeat(TOF_SAMPLING_INTERVAL, sampleToF);
 #endif
 
 #ifdef HUMAN_PRESENCE
@@ -174,6 +178,7 @@ Reactduino app(app_main);
     MAIN LOOP
     ---------
 */
+
 void loop_main() {
   Watchdog.reset();
   client.loop();
@@ -260,6 +265,34 @@ void sampleAnalogLight() {
   publishMessage("/light-a", tags,  ArrayCount(tags), fields, ArrayCount(fields));
   oldAnalogLightLevel = lightLevel;
 }
+#endif
+
+/*
+    TEMPERATURE SAMPLING_MODE
+    -------------------------
+*/
+
+#ifdef TEMPERATURE
+
+const int B = 4275;               // B value of the thermistor
+const int R0 = 100000;            // R0 = 100k
+
+void sampleTemperature() {
+  int a = analogRead(TEMPERATURE_PIN);
+
+  float R = 1023.0/a-1.0;
+  R = R0*R;
+
+  float temperature = 1.0/(log(R/R0)/B+1/298.15)-273.15; // convert to temperature via datasheet
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/temperature: ");
+    Serial.println(temperature);
+  #endif
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(temperature)}};
+  publishMessage("/temperature", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+}
+
 #endif
 
 /*
@@ -434,6 +467,10 @@ void sampleGyro() {
   String tags[][2] = {};
   String fields[][2] = {{"x", String(gyroX)}, {"y", String(gyroY)}, {"z", String(gyroZ)}};
   publishMessage("/orientation", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+}
+
+void sendGyro() {
+
 }
 
 #endif
