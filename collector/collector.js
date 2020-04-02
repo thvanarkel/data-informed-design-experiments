@@ -194,14 +194,6 @@ var dateString = function(date) {
 
 connect();
 
-// const update = function () {
-//   return new Promise(resolve => {
-//     for (thing of things) {
-//       thing.push();
-//     }
-//   });
-// }
-
 const updateLog = function() {
   console.log(aLog)
 }
@@ -222,8 +214,6 @@ const sendEvent = function() {
   insertReading("/computer/system", json)
 }
 
-// setInterval(update, 5000);
-// setInterval(updateLog, 1000);
 setInterval(sendEvent, 500);
 
 var update = cron.schedule('*/5 * * * * *', () => {
