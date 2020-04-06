@@ -77,11 +77,16 @@ void app_main() {
   app.repeat(LIGHT_SAMPLING_INTERVAL, sampleAnalogLight);
 #endif
 
+#ifdef TEMPERATURE
+  app.repeat(TEMPERATURE_SAMPLING_INTERVAL, sampleTemperature);
+#endif
+
 #ifdef MICROPHONE
   level.begin();
   if (!I2S.begin(I2S_PHILIPS_MODE, 16000, 32)) {
     Serial.println("Failed to initialize I2S!");
-    while (1); // do nothing
+    errorMessage("Failed to initialize I2S!");
+    while (1); // do nothing // TODO: change to error message
   }
   app.repeat(SOUND_SAMPLING_INTERVAL, sampleSound);
   I2S.read();
@@ -96,23 +101,23 @@ void app_main() {
   Status = VL53L0X.VL53L0X_common_init();
   if (VL53L0X_ERROR_NONE != Status) {
     Serial.println("start vl53l0x mesurement failed!");
+    errorMessage("start vl53l0x mesurement failed!")
     VL53L0X.print_pal_error(Status);
-    while (1);
   }
   VL53L0X.VL53L0X_single_ranging_init();
   if (VL53L0X_ERROR_NONE != Status) {
     Serial.println("start vl53l0x mesurement failed!");
+    errorMessage("start vl53l0x mesurement failed!");
     VL53L0X.print_pal_error(Status);
-    while (1);
   }
-  app.repeat(ToF_SAMPLING_INTERVAL, sampleToF);
+  app.repeat(TOF_SAMPLING_INTERVAL, sampleToF);
 #endif
 
 #ifdef HUMAN_PRESENCE
   Wire.begin();
   if (movementSensor.initialize() == false) {
     Serial.println("Device not found. Check wiring.");
-    while (1);
+    errorMessage("Device not found. Check wiring.");
   }
   app.repeat(PRESENCE_SAMPLING_INTERVAL, sendPresence);
 #endif;
@@ -120,7 +125,7 @@ void app_main() {
 #if defined(ACCELEROMETER) || defined(GYROSCOPE)
   if (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
-    while (1);
+    errorMessage("Failed to initialize IMU!");
   }
 #endif
 #ifdef ACCELEROMETER
@@ -174,6 +179,7 @@ Reactduino app(app_main);
     MAIN LOOP
     ---------
 */
+
 void loop_main() {
   Watchdog.reset();
   client.loop();
@@ -260,6 +266,34 @@ void sampleAnalogLight() {
   publishMessage("/light-a", tags,  ArrayCount(tags), fields, ArrayCount(fields));
   oldAnalogLightLevel = lightLevel;
 }
+#endif
+
+/*
+    TEMPERATURE SAMPLING_MODE
+    -------------------------
+*/
+
+#ifdef TEMPERATURE
+
+const int B = 4275;               // B value of the thermistor
+const int R0 = 100000;            // R0 = 100k
+
+void sampleTemperature() {
+  int a = analogRead(TEMPERATURE_PIN);
+
+  float R = 1023.0/a-1.0;
+  R = R0*R;
+
+  float temperature = 1.0/(log(R/R0)/B+1/298.15)-273.15; // convert to temperature via datasheet
+  #ifdef DEBUG_MESSAGE
+    Serial.print("/temperature: ");
+    Serial.println(temperature);
+  #endif
+  String tags[][2] = {};
+  String fields[][2] = {{"value", String(temperature)}};
+  publishMessage("/temperature", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+}
+
 #endif
 
 /*
@@ -436,6 +470,10 @@ void sampleGyro() {
   publishMessage("/orientation", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
 
+void sendGyro() {
+
+}
+
 #endif
 
 /*
@@ -467,6 +505,12 @@ void publishMessage(String topic, String tags[][2], uint16_t nTags, String field
   payload += "}";
 
   client.publish(String("/") + THING_NAME + topic, payload);
+}
+
+void errorMessage(String text) {
+  String tags[][2] = {{"event", "error"}, {"thing", THING_NAME}};
+  String fields[][2] = {{"value", text}};
+  publishMessage("/system/error", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
 
 void connect(boolean networkReconnect, boolean brokerReconnect) {
