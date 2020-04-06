@@ -105,7 +105,7 @@ void app_main() {
     VL53L0X.print_pal_error(Status);
     while (1);
   }
-  app.repeat(ToF_SAMPLING_INTERVAL, sampleToF);
+  app.repeat(TOF_SAMPLING_INTERVAL, sampleToF);
 #endif
 
 #ifdef HUMAN_PRESENCE
@@ -390,10 +390,10 @@ void sendPresence() {
   Serial.println(String(f1) + ", " + String(f2) + ", " + String(f3)  + ", " + String(f4)  + ", " + String(total));
 #endif
   String tags[][2] = {};
-  String fields[][2] = {{"field-1", String(f1)},
-                        {"field-2", String(f2)},
-                        {"field-3", String(f3)},
-                        {"field-4", String(f4)},
+  String fields[][2] = {{"field1", String(f1)},
+                        {"field2", String(f2)},
+                        {"field3", String(f3)},
+                        {"field4", String(f4)},
                         {"total", String(total)}};
   publishMessage("/presence", tags,  ArrayCount(tags), fields, ArrayCount(fields));
 }
