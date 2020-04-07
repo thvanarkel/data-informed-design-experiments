@@ -60,10 +60,9 @@ const run = async () => {
     for (sensor of sensors.s) {
       // TODO: iterate over sensors for their configuration
       var sensor = {name: sensor};
-      var config;
       var t = false;
       var b = false;
-      switch(sensor) {
+      switch(sensor.name) {
         case 'sound':
           b = true;
           break;
@@ -74,18 +73,21 @@ const run = async () => {
           t = true;
           break;
       }
-      const config = await inquirer.askSensorConfig(sensor, t, b);
+      const config = await inquirer.askSensorConfig(sensor.name, t, b);
       sensor.config = config;
       thing.sensors.push(sensor);
+
+      // TODO: write the configuration to to to disk
+
+      // TODO: compile the probe
 
       allSet = await inquirer.askIfAllSet();
     }
     session.things.push(thing);
     console.log(session);
+    // TODO: write the session configuration to to to disk
 
-    // TODO: write the configuration to to to disk
-    // TODO: compile the probe
-    // TODO: check if another probe should be added
+
 	}
 
 };

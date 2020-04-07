@@ -172,5 +172,17 @@ module.exports = {
       }
     });
     return inquirer.prompt(questions);
+  },
+  askIfAllSet: () => {
+    const question = [{
+      type: 'list',
+      name: 'type',
+      message: `Do you want to add another thing:`,
+      choices: ['yes', 'no'],
+      filter: function(value) {
+        return (value === 'yes') ? true : false;
+      }
+    }];
+    return inquirer.prompt(question);
   }
 };
