@@ -107,14 +107,33 @@ module.exports = {
     }];
     return inquirer.prompt(questions);
   },
+  askThingName: (things) => {
+    const question = [{
+      name: 'thing',
+      type: 'input',
+      message: 'What is the name of the thing:',
+      validate: function(value) {
+        if (value.length) {
+          for (thing of things) {
+            if (value === thing.name) {
+              return 'Cannot have two things with the same name';
+            }
+          }
+          return true;
+        } else {
+          return 'Please name the thing';
+        }
+      }
+    }];
+    return inquirer.prompt(question);
+  },
   selectSensors: (sensors) => {
     const questions = [{
       type: 'checkbox',
-      name: 'ignore',
-      message: 'Select the files and/or folders you wish to ignore:',
-      choices: sensors,
-      default: ['node_modules', 'bower_components']
+      name: 's',
+      message: 'Select the sensors connected to the probe:',
+      choices: sensors
     }];
     return inquirer.prompt(questions);
-  }
+  },
 };
