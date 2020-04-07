@@ -52,7 +52,7 @@ int f1, f2, f3, f4;
 float accelX, accelY, accelZ;
 #endif
 
-#ifdef GYROMETER
+#ifdef GYROSCOPE
 float gyroX, gyroY, gyroZ;
 #endif
 
@@ -101,7 +101,7 @@ void app_main() {
   Status = VL53L0X.VL53L0X_common_init();
   if (VL53L0X_ERROR_NONE != Status) {
     Serial.println("start vl53l0x mesurement failed!");
-    errorMessage("start vl53l0x mesurement failed!")
+    errorMessage("start vl53l0x mesurement failed!");
     VL53L0X.print_pal_error(Status);
   }
   VL53L0X.VL53L0X_single_ranging_init();
@@ -209,19 +209,19 @@ void loop_main() {
 #endif;
 
 #ifdef ACCELEROMETER
-  float x, y, z;
+  float ax, ay, az;
   if (IMU.accelerationAvailable()) {
-    IMU.readAcceleration(x, y, z);
+    IMU.readAcceleration(ax, ay, az);
   }
-  accelX = x; accelY = y; accelZ = z;
+  accelX = ax; accelY = ay; accelZ = az;
 #endif
 
-#ifdef GYROMETER
-  float x, y, z;
+#ifdef GYROSCOPE
+  float gx, gy, gz;
   if (IMU.gyroscopeAvailable()) {
-    IMU.readGyroscope(x, y, z);
+    IMU.readGyroscope(gx, gy, gz);
   }
-  gyroX = x; gyroY = y; gyroZ = z;
+  gyroX = gx; gyroY = gy; gyroZ = gz;
 #endif
 }
 
