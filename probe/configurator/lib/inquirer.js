@@ -1,11 +1,11 @@
 const inquirer = require('inquirer');
 
 module.exports = {
-  askGithubCredentials: () => {
+  askWiFiCredentials: () => {
     const questions = [{
-        name: 'username',
+        name: 'ssid',
         type: 'input',
-        message: 'Enter your GitHub username or e-mail address:',
+        message: 'What is the SSID name:',
         validate: function(value) {
           if (value.length) {
             return true;
@@ -15,9 +15,9 @@ module.exports = {
         }
       },
       {
-        name: 'password',
+        name: 'ssid-pass',
         type: 'password',
-        message: 'Enter your password:',
+        message: 'What is the SSID password:',
         validate: function(value) {
           if (value.length) {
             return true;

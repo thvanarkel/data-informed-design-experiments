@@ -19,8 +19,10 @@ console.log(
 
 
 const run = async () => {
-  const credentials = await inquirer.selectSensors(["motion", "temperature"]);
+  const credentials = await inquirer.askWiFiCredentials();
   console.log(credentials);
+  const sensors = await inquirer.selectSensors(["motion", "temperature"]);
+  console.log(sensors);
 };
 
 run();
