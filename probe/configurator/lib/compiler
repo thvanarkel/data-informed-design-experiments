@@ -1,0 +1,21 @@
+const SerialPort = require('serialport')
+
+module.exports = {
+  lookForProbe: async () => {
+    while(1) {
+      const ports = await SerialPort.list()
+      for (port of ports) {
+        if (port.manufacturer) {
+          if (port.manufacturer.includes("Arduino")) {
+            return port.path;
+          }
+        }
+      }
+      console.log("test")
+    }
+    return true;
+  },
+  compile: () => {
+
+  }
+}

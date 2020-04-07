@@ -1,7 +1,13 @@
 const chalk = require('chalk');
 const clear = require('clear');
 const figlet = require('figlet');
+const CLI = require('clui');
 const inquirer = require('./lib/inquirer');
+const writer = require('./lib/writer');
+const compiler = require('./lib/compiler');
+
+const { exec } = require("child_process");
+
 
 clear();
 
@@ -50,46 +56,71 @@ const run = async () => {
 	 */
 	console.log("Great, now we move on to configuring the things!");
 	var allSet = false;
-  session.things = [];
+	session.things = [];
 	while (!allSet) {
-		var thing = {};
-    const answ = await inquirer.askThingName(session.things);
-    thing.name = answ.thing;
-    const sensors = await inquirer.selectSensors(["sound", "light", "temperature", "motion", "time_of_flight", "human_presence", "accelerometer", "gyroscope"]);
-    thing.sensors = [];
-    for (sensor of sensors.s) {
-      // TODO: iterate over sensors for their configuration
-      var sensor = {name: sensor};
-      var t = false;
-      var b = false;
-      switch(sensor.name) {
-        case 'sound':
-          b = true;
-          break;
-        case 'light':
-          t = true;
-          break;
-        case 'motion':
-          t = true;
-          break;
-      }
-      const config = await inquirer.askSensorConfig(sensor.name, t, b);
-      sensor.config = config;
-      thing.sensors.push(sensor);
+		// var thing = {};
+		// const answ = await inquirer.askThingName(session.things);
+		// thing.name = answ.thing;
+		// const sensors = await inquirer.selectSensors(["sound", "light", "temperature", "motion", "time_of_flight", "human_presence", "accelerometer", "gyroscope"]);
+		// thing.sensors = [];
+		// for (sensor of sensors.s) {
+		// 	// TODO: iterate over sensors for their configuration
+		// 	var sensor = {
+		// 		name: sensor
+		// 	};
+		// 	var t = false;
+		// 	var b = false;
+		// 	switch (sensor.name) {
+		// 		case 'sound':
+		// 			b = true;
+		// 			break;
+		// 		case 'light':
+		// 			t = true;
+		// 			break;
+		// 		case 'motion':
+		// 			t = true;
+		// 			break;
+		// 	}
+		// 	const config = await inquirer.askSensorConfig(sensor.name, t, b);
+		// 	sensor.config = config;
+		// 	thing.sensors.push(sensor);
 
-      // TODO: write the configuration to to to disk
+			// TODO: write the configuration to to to disk
 
-      // TODO: compile the probe
+			// TODO: compile the probe
+      console.log("Connect the probe to the computer");
 
-      allSet = await inquirer.askIfAllSet();
-    }
-    session.things.push(thing);
-    console.log(session);
-    // TODO: write the session configuration to to to disk
+      const port = await compiler.lookForProbe();
+
+			// Check if the user wants to configure another probe
+			allSet = await inquirer.askIfAllSet();
+		}
+		session.things.push(thing);
+		console.log(session);
+		// TODO: write the session configuration to to to disk
 
 
-	}
+//}
 
 };
 
 run();
+
+// ports = [];
+
+// exec("serialport-list", (error, stdout, stderr) => {
+//   if (error) {
+//     console.log(`error: ${error.message}`);
+//     return;
+//   }
+//   if (stderr) {
+//     console.log(`stderr: ${stderr}`);
+//     return;
+//   }
+//   console.log(`stdout: ${stdout}`);
+// });
+// const f = async () => {
+//   const ports = await SerialPort.list()
+//   console.log(ports)
+// }
+// f()
