@@ -184,5 +184,6 @@ module.exports = {
 				return (value === 'yes') ? false : true;
 			}
 		}];
+		return inquirer.prompt(question);
 	}
 };
