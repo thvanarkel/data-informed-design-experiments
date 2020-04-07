@@ -36,16 +36,16 @@ const run = async () => {
 	/*
 	 *  Ask for session details
 	 */
-	// console.log("Let's start by configuring the information for this session.");
-	// const id = await inquirer.askSessionDetails();
-	// session.id = id.id;
-	// const credentials = await inquirer.askWiFiCredentials();
-	// session.credentials = credentials;
-	// const hostDetails = await inquirer.askHostDetails(session.id);
-	// session.host = hostDetails;
-	// const debugLevels = await inquirer.configureDebugLevels();
-	// session.debugLevels = debugLevels.levels;
-	// console.log(session);
+	console.log("Let's start by configuring the information for this session.");
+	const id = await inquirer.askSessionDetails();
+	session.id = id.id;
+	const credentials = await inquirer.askWiFiCredentials();
+	session.credentials = credentials;
+	const hostDetails = await inquirer.askHostDetails(session.id);
+	session.host = hostDetails;
+	const debugLevels = await inquirer.configureDebugLevels();
+	session.debugLevels = debugLevels.levels;
+	console.log(session);
 
 	/*
 	 *  Configure things
@@ -59,41 +59,40 @@ const run = async () => {
 		thing.name = answ.thing;
 		const sensors = await inquirer.selectSensors(["sound", "light", "temperature", "motion", "time_of_flight", "human_presence", "accelerometer", "gyroscope"]);
 		thing.sensors = [];
-		// for (sensor of sensors.s) {
-		// 	var sensor = {
-		// 		name: sensor
-		// 	};
-		// 	var t = false;
-		// 	var b = false;
-		// 	switch (sensor.name) {
-		// 		case 'sound':
-		// 			b = true;
-		// 			break;
-		// 		case 'light':
-		// 			t = true;
-		// 			break;
-		// 		case 'motion':
-		// 			t = true;
-		// 			break;
-		// 	}
-		// 	const config = await inquirer.askSensorConfig(sensor.name, t, b);
-		// 	sensor.config = config;
-		// 	thing.sensors.push(sensor);
-		// }
-		// session.things.push(thing);
-		// console.log(session);
-		//
-		// // TODO: write the configuration to to to disk
-		//
-		//
-		// // TODO: compile the probe
-		// console.log("Connect the probe to the computer");
-		//
-		// const port = await compiler.lookForProbe();
-		// console.log(`Found probe at ${port}`);
-		// const uploaded = await compiler.uploadFirmware(port)
-		// console.log(`Succesfully uploaded firmware to probe for ${thing.name}`)
+		for (sensor of sensors.s) {
+			var sensor = {
+				name: sensor
+			};
+			var t = false;
+			var b = false;
+			switch (sensor.name) {
+				case 'sound':
+					b = true;
+					break;
+				case 'light':
+					t = true;
+					break;
+				case 'motion':
+					t = true;
+					break;
+			}
+			const config = await inquirer.askSensorConfig(sensor.name, t, b);
+			sensor.config = config;
+			thing.sensors.push(sensor);
+		}
+		session.things.push(thing);
+		console.log(session);
 
+		// TODO: write the configuration to to to disk
+		const file = await writer.createConfig(session, thing);
+		console.log(file);
+
+		console.log("Connect the probe to the computer");
+
+		const port = await compiler.lookForProbe();
+		console.log(`Found probe at ${port}`);
+		const uploaded = await compiler.uploadFirmware(port)
+		console.log(`Succesfully uploaded firmware to probe for ${thing.name}`)
 
 		// Check if the user wants to configure another probe
 		const a = await inquirer.askIfAllSet();

@@ -13,7 +13,7 @@ const char pass[] = SECRET_PASS;
 WiFiClient net;
 MQTTClient client;
 
-#ifdef MICROPHONE
+#ifdef SOUND
 #include <I2S.h>
 #include <movingAvg.h>
 movingAvg level(128);
@@ -81,7 +81,7 @@ void app_main() {
   app.repeat(TEMPERATURE_SAMPLING_INTERVAL, sampleTemperature);
 #endif
 
-#ifdef MICROPHONE
+#ifdef SOUND
   level.begin();
   if (!I2S.begin(I2S_PHILIPS_MODE, 16000, 32)) {
     Serial.println("Failed to initialize I2S!");
@@ -110,7 +110,7 @@ void app_main() {
     errorMessage("start vl53l0x mesurement failed!");
     VL53L0X.print_pal_error(Status);
   }
-  app.repeat(TOF_SAMPLING_INTERVAL, sampleToF);
+  app.repeat(TIME_OF_FLIGHT_SAMPLING_INTERVAL, sampleToF);
 #endif
 
 #ifdef HUMAN_PRESENCE
@@ -119,7 +119,7 @@ void app_main() {
     Serial.println("Device not found. Check wiring.");
     errorMessage("Device not found. Check wiring.");
   }
-  app.repeat(PRESENCE_SAMPLING_INTERVAL, sendPresence);
+  app.repeat(HUMAN_PRESENCE_SAMPLING_INTERVAL, sendPresence);
 #endif;
 
 #if defined(ACCELEROMETER) || defined(GYROSCOPE)
@@ -194,8 +194,8 @@ void loop_main() {
     connect(networkReconnect, brokerReconnect);
   }
 
-#ifdef MICROPHONE;
-  int reading = sample() - MICROPHONE_BASELINE;
+#ifdef SOUND;
+  int reading = sample() - SOUND_BASELINE;
   level.reading(reading);
 #ifdef DEBUG_AUDIO;
   Serial.print(reading);
@@ -253,6 +253,7 @@ void sampleLight() {
 
 #ifdef ANALOG_LIGHT
 int oldAnalogLightLevel = 0;
+#define LIGHT_PIN A0
 
 void sampleAnalogLight() {
   analogRead(LIGHT_PIN);
@@ -275,6 +276,7 @@ void sampleAnalogLight() {
 
 #ifdef TEMPERATURE
 
+#define TEMPERATURE_PIN A0
 const int B = 4275;               // B value of the thermistor
 const int R0 = 100000;            // R0 = 100k
 
@@ -297,11 +299,11 @@ void sampleTemperature() {
 #endif
 
 /*
-   MICROPHONE SAMPLING
+   SOUND SAMPLING
    -------------------
 */
 
-#ifdef MICROPHONE
+#ifdef SOUND
 
 void sampleSound() {
   int l = level.getAvg();
