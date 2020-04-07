@@ -1,18 +1,14 @@
 const chalk = require('chalk');
 const clear = require('clear');
 const figlet = require('figlet');
-const CLI = require('clui');
+
 const inquirer = require('./lib/inquirer');
 const writer = require('./lib/writer');
 const compiler = require('./lib/compiler');
 
-
-
+const session = {};
 
 clear();
-
-const session = {};
-const Spinner = CLI.Spinner;
 
 console.log(
 	chalk.cyan(
@@ -31,7 +27,6 @@ console.log(
 		})
 	)
 );
-
 
 const run = async () => {
 	console.log("Hello there! 👋");
@@ -86,28 +81,27 @@ const run = async () => {
 		// 	sensor.config = config;
 		// 	thing.sensors.push(sensor);
 
-			// TODO: write the configuration to to to disk
+		// TODO: write the configuration to to to disk
 
-			// TODO: compile the probe
-      console.log("Connect the probe to the computer");
-      var status = new Spinner('🤖 Looking for probe....');
-      status.start();
+		// TODO: compile the probe
+		console.log("Connect the probe to the computer");
 
-      const port = await compiler.lookForProbe();
-      status.stop();
-      console.log(`Found probe at ${port}`);
-      compiler.uploadFirmware(port)
+		const port = await compiler.lookForProbe();
+		console.log(`Found probe at ${port}`);
+		const uploaded = await compiler.uploadFirmware(port)
+		console.log('Succesfully uploaded firmware to probe')
 
 
-			// Check if the user wants to configure another probe
-			allSet = await inquirer.askIfAllSet();
-		}
-		session.things.push(thing);
-		console.log(session);
-		// TODO: write the session configuration to to to disk
+		// Check if the user wants to configure another probe
+		allSet = await inquirer.askIfAllSet();
+		clear();
+	}
+	session.things.push(thing);
+	console.log(session);
+	// TODO: write the session configuration to to to disk
 
 
-//}
+	//}
 
 };
 

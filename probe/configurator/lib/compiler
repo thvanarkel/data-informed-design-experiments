@@ -1,57 +1,57 @@
 const SerialPort = require('serialport')
 
-const { exec } = require("child_process");
+const exec = require("child_process").exec;
+
+const CLI = require('clui');
+const Spinner = CLI.Spinner;
 
 execShellCommand = (cmd) => {
- return new Promise((resolve, reject) => {
-  exec(cmd, (error, stdout, stderr) => {
-   if (error) {
-    console.warn(error);
-   }
-   resolve(stdout? stdout : stderr);
-  });
- });
+	return new Promise((resolve, reject) => {
+		exec(cmd, (error, stdout, stderr) => {
+			if (error) {
+				console.warn(error);
+			}
+			resolve(stdout ? stdout : stderr);
+		});
+	});
 }
 
 module.exports = {
-  lookForProbe: async () => {
-    while(1) {
-      const ports = await SerialPort.list()
-      for (port of ports) {
-        if (port.manufacturer) {
-          if (port.manufacturer.includes("Arduino")) {
-            return port.path;
-          }
-        }
-      }
-    }
-    return true;
-  },
-  uploadFirmware: async (port) => {
-    var command = "arduino-cli compile";
-    var fqbn = "arduino:samd:nano_33_iot";
-    var firmwareFolder = "probe"
+	lookForProbe: async () => {
+		var status = new Spinner('🤖 Looking for probe....');
+		status.start();
+		while (1) {
+			const ports = await SerialPort.list()
+			for (port of ports) {
+				if (port.manufacturer) {
+					if (port.manufacturer.includes("Arduino")) {
+						status.stop();
+						return port.path;
+					}
+				}
+			}
+		}
+		return true;
+	},
+	uploadFirmware: async (port) => {
+		var command = "arduino-cli compile";
+		var fqbn = "arduino:samd:nano_33_iot";
+		var firmwareFolder = "probe"
 
-    const compiled = await execShellCommand(`${command} --fqbn ${fqbn} ${firmwareFolder}`);
-    console.log(compiled);
+		var status = new Spinner('Compiling firmware...');
+		status.start();
+		const compiled = await execShellCommand(`${command} --fqbn ${fqbn} ${firmwareFolder}`);
+		status.stop();
+		// console.log(compiled);
 
-    command = "arduino-cli upload";
-    fqbn = "arduino:samd:nano_33_iot";
-    firmwareFolder = "probe"
+		command = "arduino-cli upload";
+		fqbn = "arduino:samd:nano_33_iot";
+		firmwareFolder = "probe"
 
-    const uploaded = await execShellCommand(`${command} -p ${port} --fqbn ${fqbn} ${firmwareFolder}`);
-    console.log(uploaded);
-
-    // exec(`${command} -p ${port} --fqbn ${fqbn} ${firmwareFolder}`, (error, stdout, stderr) => {
-    //   if (error) {
-    //     console.log(`error: ${error.message}`);
-    //     return;
-    //   }
-    //   if (stderr) {
-    //     console.log(`stderr: ${stderr}`);
-    //     return;
-    //   }
-    //   console.log(`stdout: ${stdout}`);
-    // });
-  }
+		status = new Spinner('Uploading firmware...');
+		status.start();
+		const uploaded = await execShellCommand(`${command} -p ${port} --fqbn ${fqbn} ${firmwareFolder}`);
+		status.stop();
+		return true;
+	}
 }
