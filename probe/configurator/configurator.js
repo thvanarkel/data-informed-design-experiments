@@ -5,6 +5,8 @@ const inquirer = require('./lib/inquirer');
 
 clear();
 
+const session = {};
+
 console.log(
   chalk.cyan(
     figlet.textSync('probe', { font: 'isometric3', horizontalLayout: 'full' })
@@ -19,9 +21,15 @@ console.log(
 
 
 const run = async () => {
+  console.log("Hello there! 👋");
+  console.log("Let's start by configuring the information for this session.");
+  const id = await inquirer.askSessionDetails();
+  session.id = id.id;
+  console.log(session);
   const credentials = await inquirer.askWiFiCredentials();
-  console.log(credentials);
-  const sensors = await inquirer.selectSensors(["motion", "temperature"]);
+  session.credentials = credentials;
+  console.log(session);
+  const sensors = await inquirer.selectSensors(["light", "motion", "temperature"]);
   console.log(sensors);
 };
 

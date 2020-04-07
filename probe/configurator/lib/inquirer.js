@@ -1,6 +1,23 @@
 const inquirer = require('inquirer');
 
+function pad(n, width=1, z=0) {return (String(z).repeat(width) + String(n)).slice(String(n).length)}
+
 module.exports = {
+  askSessionDetails: () => {
+    const question =[{
+      name: 'id',
+      type: 'input',
+      message: 'What is the session ID:',
+      validate: function(value) {
+        var valid = !isNaN(parseInt(value));
+        return valid || 'Please enter a number';
+      },
+      filter: function(value) {
+        return pad(value, 2);
+      }
+    }];
+    return inquirer.prompt(question);
+  },
   askWiFiCredentials: () => {
     const questions = [{
         name: 'ssid',
@@ -10,25 +27,31 @@ module.exports = {
           if (value.length) {
             return true;
           } else {
-            return 'Please enter your username or e-mail address.';
+            return 'Please enter a SSID';
           }
         }
       },
       {
-        name: 'ssid-pass',
+        name: 'ssidPass',
         type: 'password',
         message: 'What is the SSID password:',
         validate: function(value) {
           if (value.length) {
             return true;
           } else {
-            return 'Please enter your password.';
+            return 'Please enter a password.';
           }
         }
       }
     ];
     return inquirer.prompt(questions);
   },
+
+
+
+
+
+
   selectSensors: (sensors) => {
     const questions = [{
       type: 'checkbox',
