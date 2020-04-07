@@ -181,7 +181,7 @@ module.exports = {
 			message: `Do you want to add another thing:`,
 			choices: ['yes', 'no'],
 			filter: function(value) {
-				return (value === 'yes') ? true : false;
+				return (value === 'yes') ? false : true;
 			}
 		}];
 	}
