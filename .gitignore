@@ -10,3 +10,4 @@ probe/Hardware/~$Right_shell.SLDPRT
 probe/Hardware/~$Shell.SLDASM
 analyser/src/data
 probe/configurator/node_modules
+probe/configurator/probe/configuration.h

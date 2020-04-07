@@ -6,12 +6,13 @@ const inquirer = require('./lib/inquirer');
 const writer = require('./lib/writer');
 const compiler = require('./lib/compiler');
 
-const { exec } = require("child_process");
+
 
 
 clear();
 
 const session = {};
+const Spinner = CLI.Spinner;
 
 console.log(
 	chalk.cyan(
@@ -89,8 +90,14 @@ const run = async () => {
 
 			// TODO: compile the probe
       console.log("Connect the probe to the computer");
+      var status = new Spinner('🤖 Looking for probe....');
+      status.start();
 
       const port = await compiler.lookForProbe();
+      status.stop();
+      console.log(`Found probe at ${port}`);
+      compiler.uploadFirmware(port)
+
 
 			// Check if the user wants to configure another probe
 			allSet = await inquirer.askIfAllSet();

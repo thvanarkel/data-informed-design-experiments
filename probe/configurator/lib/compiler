@@ -1,5 +1,7 @@
 const SerialPort = require('serialport')
 
+const { exec } = require("child_process");
+
 module.exports = {
   lookForProbe: async () => {
     while(1) {
@@ -11,11 +13,25 @@ module.exports = {
           }
         }
       }
-      console.log("test")
     }
     return true;
   },
-  compile: () => {
+  uploadFirmware: (port) => {
+    var command = "arduino-cli upload";
+    var fqbn = "arduino:samd:nano_33_iot";
+    var firmwareFolder = " ../"
 
+
+    exec(`${command} -p ${port} --fqbn ${fqbn} ${firmwareFolder}`, (error, stdout, stderr) => {
+      if (error) {
+        console.log(`error: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        console.log(`stderr: ${stderr}`);
+        return;
+      }
+      console.log(`stdout: ${stdout}`);
+    });
   }
 }
