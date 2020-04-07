@@ -55,12 +55,37 @@ const run = async () => {
 		var thing = {};
     const answ = await inquirer.askThingName(session.things);
     thing.name = answ.thing;
-    session.things.push(thing);
     const sensors = await inquirer.selectSensors(["sound", "light", "temperature", "motion", "time_of_flight", "human_presence", "accelerometer", "gyroscope"]);
-    console.log(sensors)
+    thing.sensors = [];
     for (sensor of sensors.s) {
-      
+      // TODO: iterate over sensors for their configuration
+      var sensor = {name: sensor};
+      var config;
+      var t = false;
+      var b = false;
+      switch(sensor) {
+        case 'sound':
+          b = true;
+          break;
+        case 'light':
+          t = true;
+          break;
+        case 'motion':
+          t = true;
+          break;
+      }
+      const config = await inquirer.askSensorConfig(sensor, t, b);
+      sensor.config = config;
+      thing.sensors.push(sensor);
+
+      allSet = await inquirer.askIfAllSet();
     }
+    session.things.push(thing);
+    console.log(session);
+
+    // TODO: write the configuration to to to disk
+    // TODO: compile the probe
+    // TODO: check if another probe should be added
 	}
 
 };

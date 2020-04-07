@@ -132,8 +132,45 @@ module.exports = {
       type: 'checkbox',
       name: 's',
       message: 'Select the sensors connected to the probe:',
-      choices: sensors
+      choices: sensors,
+      validate: function(value) {
+        var valid = value.length > 0;
+        return valid || 'Select at least one sensor';
+      }
     }];
     return inquirer.prompt(questions);
   },
+  askSensorConfig: (sensor, type, baseline) => {
+    const questions = [];
+    if (type) {
+      questions.push({
+        type: 'list',
+        name: 'type',
+        message: `Is ${sensor} connected to an analog or digital port:`,
+        choices: ['analog', 'digital']
+      })
+    }
+    if (baseline) {
+      questions.push({
+        type: 'input',
+        name: 'baseline',
+        message: `What is the baseline for ${sensor}:`,
+        validate: function(value) {
+          var valid = !isNaN(parseInt(value));
+          return valid || 'Please enter a number';
+        }
+      });
+    }
+    questions.push({
+      type: 'input',
+      name: 'interval',
+      message: `What is the sampling interval for ${sensor}:`,
+      default: 'ms',
+      validate: function(value) {
+        var valid = !isNaN(parseInt(value));
+        return valid || 'Please enter a number';
+      }
+    });
+    return inquirer.prompt(questions);
+  }
 };
