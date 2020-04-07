@@ -41,15 +41,13 @@ module.exports = {
 		var status = new Spinner('Compiling firmware...');
 		status.start();
 		const compiled = await execShellCommand(`${command} --fqbn ${fqbn} ${firmwareFolder}`);
-		status.stop();
 		// console.log(compiled);
 
 		command = "arduino-cli upload";
 		fqbn = "arduino:samd:nano_33_iot";
 		firmwareFolder = "probe"
 
-		status = new Spinner('Uploading firmware...');
-		status.start();
+		status.message('Uploading firmware...');
 		const uploaded = await execShellCommand(`${command} -p ${port} --fqbn ${fqbn} ${firmwareFolder}`);
 		status.stop();
 		return true;
