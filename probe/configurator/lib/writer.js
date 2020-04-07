@@ -43,6 +43,10 @@ module.exports = {
 					data += ` #define ${u}_PIN 5`
 				}
 			}
+			if (sensor.name === 'sound') { // Exception for sound sensor
+				data += '\n'
+				data += ` #define ${u}_BASELINE ${sensor.config.baseline}`
+			}
 		}
 
 		return new Promise((resolve, reject) => {
