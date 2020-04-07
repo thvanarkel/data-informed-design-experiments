@@ -22,14 +22,29 @@ console.log(
 
 const run = async () => {
   console.log("Hello there! 👋");
+
+  // TODO: Configure the directory of the probe sketch here, and the directory for writing the config file
+
+  /*
+   *  Ask for session details
+   */
   console.log("Let's start by configuring the information for this session.");
   const id = await inquirer.askSessionDetails();
   session.id = id.id;
-  console.log(session);
   const credentials = await inquirer.askWiFiCredentials();
   session.credentials = credentials;
+  const hostDetails = await inquirer.askHostDetails(session.id);
+  session.host = hostDetails;
+  const debugLevels = await inquirer.configureDebugLevels();
+  session.debugLevels = debugLevels.levels;
   console.log(session);
-  const sensors = await inquirer.selectSensors(["light", "motion", "temperature"]);
+
+  /*
+   *  Configure things
+   */
+  console.log("Let's start by configuring the information for this session.");
+
+  const sensors = await inquirer.selectSensors([ "sound", "light", "temperature", "motion", "time_of_flight", "human_presence", "accelerometer", "gyroscope"]);
   console.log(sensors);
 };
 
