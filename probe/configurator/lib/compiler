@@ -2,22 +2,15 @@ const SerialPort = require('serialport')
 
 const { exec } = require("child_process");
 
-compile = () => {
-  var command = "arduino-cli compile";
-  var fqbn = "arduino:samd:nano_33_iot";
-  var firmwareFolder = "probe"
-
-  exec(`${command} --fqbn ${fqbn} ${firmwareFolder}`, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      return;
-    }
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
+execShellCommand = (cmd) => {
+ return new Promise((resolve, reject) => {
+  exec(cmd, (error, stdout, stderr) => {
+   if (error) {
+    console.warn(error);
+   }
+   resolve(stdout? stdout : stderr);
   });
+ });
 }
 
 module.exports = {
@@ -34,23 +27,31 @@ module.exports = {
     }
     return true;
   },
-  uploadFirmware: (port) => {
-    compile();
-
-    var command = "arduino-cli upload";
+  uploadFirmware: async (port) => {
+    var command = "arduino-cli compile";
     var fqbn = "arduino:samd:nano_33_iot";
     var firmwareFolder = "probe"
 
-    exec(`${command} -p ${port} --fqbn ${fqbn} ${firmwareFolder}`, (error, stdout, stderr) => {
-      if (error) {
-        console.log(`error: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        console.log(`stderr: ${stderr}`);
-        return;
-      }
-      console.log(`stdout: ${stdout}`);
-    });
+    const compiled = await execShellCommand(`${command} --fqbn ${fqbn} ${firmwareFolder}`);
+    console.log(compiled);
+
+    command = "arduino-cli upload";
+    fqbn = "arduino:samd:nano_33_iot";
+    firmwareFolder = "probe"
+
+    const uploaded = await execShellCommand(`${command} -p ${port} --fqbn ${fqbn} ${firmwareFolder}`);
+    console.log(uploaded);
+
+    // exec(`${command} -p ${port} --fqbn ${fqbn} ${firmwareFolder}`, (error, stdout, stderr) => {
+    //   if (error) {
+    //     console.log(`error: ${error.message}`);
+    //     return;
+    //   }
+    //   if (stderr) {
+    //     console.log(`stderr: ${stderr}`);
+    //     return;
+    //   }
+    //   console.log(`stdout: ${stdout}`);
+    // });
   }
 }
