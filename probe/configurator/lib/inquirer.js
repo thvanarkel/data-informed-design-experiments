@@ -107,12 +107,23 @@ module.exports = {
 		]
 		return inquirer.prompt(questions);
 	},
-	configureDebugLevels: () => {
+	configureDebugLevels: (thing) => {
+		levels = [];
+		if (thing && thing.debugLevels) {
+			for (el of thing.debugLevels) {
+				if (el === 'audio') {
+					levels.push('Raw audio values')
+				} else if (el === 'message') {
+					levels.push('All messages')
+				}
+			}
+		}
 		const questions = [{
 			type: 'checkbox',
 			name: 'levels',
 			message: 'Select what should be output to the console',
 			choices: ['Raw audio values', 'All messages'],
+			default: levels,
 			filter: function(value) {
 				for (const [i, el] of value.entries()) {
 					if (el === 'Raw audio values') {
@@ -126,15 +137,19 @@ module.exports = {
 		}];
 		return inquirer.prompt(questions);
 	},
-	askThingName: (things) => {
+	askThingName: (things, thing, edit) => {
 		const question = [{
 			name: 'thing',
 			type: 'input',
 			message: 'What is the name of the thing:',
+			default: thing && thing.name,
 			validate: function(value) {
 				if (value.length) {
-					for (thing of things) {
-						if (value === thing.name) {
+					if (thing && value === thing.name) {
+						return true;
+					}
+					for (t of things) {
+						if (value === t.name) {
 							return 'Cannot have two things with the same name';
 						}
 					}
@@ -146,12 +161,19 @@ module.exports = {
 		}];
 		return inquirer.prompt(question);
 	},
-	selectSensors: (sensors) => {
+	selectSensors: (sensors, thing) => {
+		s = [];
+		if (thing && thing.sensors) {
+			for (sensor of thing.sensors) {
+				s.push(sensor.name);
+			}
+		}
 		const questions = [{
 			type: 'checkbox',
 			name: 's',
 			message: 'Select the sensors connected to the probe:',
 			choices: sensors,
+			default: s,
 			validate: function(value) {
 				var valid = value.length > 0;
 				return valid || 'Select at least one sensor';
@@ -159,14 +181,15 @@ module.exports = {
 		}];
 		return inquirer.prompt(questions);
 	},
-	askSensorConfig: (sensor, type, baseline) => {
+	askSensorConfig: (sensor, type, baseline, config) => {
 		const questions = [];
 		if (type) {
 			questions.push({
 				type: 'list',
 				name: 'type',
 				message: `Is ${sensor} connected to an analog or digital port:`,
-				choices: ['analog', 'digital']
+				choices: ['analog', 'digital'],
+				default: config && config.type
 			})
 		}
 		if (baseline) {
@@ -174,6 +197,7 @@ module.exports = {
 				type: 'input',
 				name: 'baseline',
 				message: `What is the baseline for ${sensor}:`,
+				default: config && config.baseline,
 				validate: function(value) {
 					var valid = !isNaN(parseInt(value));
 					return valid || 'Please enter a number';
@@ -183,13 +207,22 @@ module.exports = {
 		questions.push({
 			type: 'input',
 			name: 'interval',
-			message: `What is the sampling interval for ${sensor}:`,
-			default: 'ms',
+			message: `What is the sampling interval for ${sensor} (ms):`,
+			default: config && config.interval,
 			validate: function(value) {
 				var valid = !isNaN(parseInt(value));
 				return valid || 'Please enter a number';
 			}
 		});
+		return inquirer.prompt(questions);
+	},
+	editThings: (things) => {
+		const questions = [{
+			type: 'checkbox',
+			name: 'things',
+			message: 'Select the things you want to edit (press enter to select none):',
+			choices: things
+		}];
 		return inquirer.prompt(questions);
 	},
 	askIfAllSet: () => {
