@@ -7,7 +7,11 @@ module.exports = {
 		data += `// configuration for ${thing.name} in session ${session.id} \n`;
 		data += `\n// network connection \n#define SECRET_SSID "${session.credentials.ssid}" \n#define SECRET_PASS "${session.credentials.password}" \n`;
 
-		for (level of session.debugLevels) {
+		data += `\n\n// host configuration \n#define HOST_NAME "${session.host.hostname}" \n#define SECRET_USERNAME "${session.host.username}" \n#define SECRET_PASSWORD "${session.host.password}" \n`
+
+		data += `\n// thing configuration \n#define THING_NAME "${thing.name}"\n`
+
+		for (level of thing.debugLevels) {
 			data += "\n"
 			if (level === 'audio') {
 				data += "#define DEBUG_AUDIO";
@@ -16,16 +20,9 @@ module.exports = {
 			}
 		}
 
-		data += `\n\n// host configuration \n#define HOST_NAME "${session.host.hostname}" \n#define SECRET_USERNAME "${session.host.username}" \n#define SECRET_PASSWORD "${session.host.password}" \n`
-
-		data += `\n// thing configuration \n#define THING_NAME "${thing.name}"\n`
-
-		console.log(thing.sensors)
-
 		for (sensor of thing.sensors) {
 			data += '\n'
 			const u = sensor.name.toUpperCase();
-
 			// Add name
 			if (sensor.name === 'light') { // Exception for light sensor
 				const t = sensor.config.type.toUpperCase();
@@ -56,5 +53,13 @@ module.exports = {
 			});
 		});
 
+	},
+	createSessionLog: (session) => {
+		return new Promise((resolve, reject) => {
+			fs.writeFile(`session-${session.id}.txt`, JSON.stringify(session), function(err) {
+				if (err) return console.log(err);
+				resolve(session);
+			});
+		});
 	}
 }
