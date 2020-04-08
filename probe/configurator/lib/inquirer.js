@@ -5,11 +5,25 @@ function pad(n, width = 1, z = 0) {
 }
 
 module.exports = {
-	askSessionDetails: () => {
+	reviewSession: () => {
+		const question = [{
+			type: 'list',
+			name: 'review',
+			message: `Do you want to review the session configuration or move over to configuring probes?`,
+			choices: ['Review configuration', 'Configure probes'],
+			filter: function(value) {
+				return (value === 'Review configuration') ? true : false;
+			}
+		}];
+		return inquirer.prompt(question);
+	},
+	askSessionDetails: (session) => {
+
 		const question = [{
 			name: 'id',
 			type: 'input',
 			message: 'What is the session ID:',
+			default: session && session.id,
 			validate: function(value) {
 				var valid = !isNaN(parseInt(value));
 				return valid || 'Please enter a number';
@@ -20,11 +34,12 @@ module.exports = {
 		}];
 		return inquirer.prompt(question);
 	},
-	askWiFiCredentials: () => {
+	askWiFiCredentials: (session) => {
 		const questions = [{
 				name: 'ssid',
 				type: 'input',
 				message: 'What is the SSID name:',
+				default: session.credentials && session.credentials.ssid,
 				validate: function(value) {
 					if (value.length) {
 						return true;
@@ -37,6 +52,7 @@ module.exports = {
 				name: 'password',
 				type: 'password',
 				message: 'What is the SSID password:',
+				default: session.credentials && session.credentials.password,
 				validate: function(value) {
 					if (value.length) {
 						return true;
@@ -48,12 +64,12 @@ module.exports = {
 		];
 		return inquirer.prompt(questions);
 	},
-	askHostDetails: (id) => {
+	askHostDetails: (session) => {
 		const questions = [{
 				type: 'input',
 				name: 'hostname',
 				message: 'What is the host name:',
-				default: `collector${id}`,
+				default: `collector${session.id}`,
 				validate: function(value) {
 					if (value.length) {
 						return true;
@@ -66,6 +82,7 @@ module.exports = {
 				name: 'username',
 				type: 'input',
 				message: 'What is the username for the host:',
+				default: session.host && session.host.username,
 				validate: function(value) {
 					if (value.length) {
 						return true;
@@ -78,6 +95,7 @@ module.exports = {
 				name: 'password',
 				type: 'password',
 				message: 'What is the password for the host:',
+				default: session.host && session.host.password,
 				validate: function(value) {
 					if (value.length) {
 						return true;

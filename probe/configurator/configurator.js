@@ -6,7 +6,10 @@ const inquirer = require('./lib/inquirer');
 const writer = require('./lib/writer');
 const compiler = require('./lib/compiler');
 
-const session = {};
+var session = {};
+
+var editMode = false;
+var sessionFilePath;
 
 clear();
 
@@ -33,26 +36,54 @@ const run = async () => {
 
 	// TODO: Configure the directory of the probe sketch here, and the directory for writing the config file
 
+	var argv = require('minimist')(process.argv.slice(2));
+	var path = argv.s
+	var review = true;
+	if ('s' in argv) {
+		sessionFilePath = argv.s
+		let s = await writer.readSession(sessionFilePath);
+		session = s;
+		editMode = true;
+		console.log("Loaded a session file!")
+		review = (await inquirer.reviewSession()).review;
+		console.log(review)
+	} else {
+		console.log("Let's start by configuring the information for this session.");
+	}
 	/*
 	 *  Ask for session details
 	 */
-	console.log("Let's start by configuring the information for this session.");
-	const id = await inquirer.askSessionDetails();
-	session.id = id.id;
-	const credentials = await inquirer.askWiFiCredentials();
-	session.credentials = credentials;
-	const hostDetails = await inquirer.askHostDetails(session.id);
-	session.host = hostDetails;
+	if (review) {
+		const id = await inquirer.askSessionDetails(session);
+		session.id = id.id;
+		// session.credentials = {};
+		const credentials = await inquirer.askWiFiCredentials(session);
+		session.credentials = credentials;
+		// session.host = {};
+		const hostDetails = await inquirer.askHostDetails(session);
+		session.host = hostDetails;
+	}
 
 	/*
 	 *  Configure things
 	 */
 	console.log("\nGreat, now we move on to configuring the things!");
 	var allSet = false;
-	session.things = [];
+	if (editMode) {
+
+	} else {
+		session.things = [];
+	}
+
+	/*
+	 * 	Add new things
+	 */
 	while (!allSet) {
 		var thing = {};
-		const answ = await inquirer.askThingName(session.things);
+
+		// make some changes for edit mode.
+
+		const answ = await inquirer.askThingName();
 		thing.name = answ.thing;
 
 		const debugLevels = await inquirer.configureDebugLevels();
@@ -83,7 +114,7 @@ const run = async () => {
 		}
 		session.things.push(thing);
 
-		const file = await writer.createConfig(session, thing);
+		const file = await writer.createConfig(thing);
 
 		console.log("Connect the probe to the computer");
 

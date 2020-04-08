@@ -61,5 +61,13 @@ module.exports = {
 				resolve(session);
 			});
 		});
+	},
+	readSession: (path) => {
+		return new Promise((resolve, reject) => {
+			fs.readFile(path, (err, data) => {
+				if (err) return console.error(err)
+				resolve(JSON.parse(data))
+			})
+		})
 	}
 }
