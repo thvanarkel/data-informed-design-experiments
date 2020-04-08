@@ -387,17 +387,20 @@ void sampleToF() {
   memset(&RangingMeasurementData, 0, sizeof(VL53L0X_RangingMeasurementData_t));
   Status = VL53L0X.PerformSingleRangingMeasurement(&RangingMeasurementData);
   if (VL53L0X_ERROR_NONE == Status) {
+    int distance = 0;
     if (RangingMeasurementData.RangeMilliMeter >= 2000) {
       Serial.println("out of range!!");
+      distance = 2000;
     } else {
-#ifdef DEBUG_MESSAGE
-      Serial.print("/distance: ");
-      Serial.println(RangingMeasurementData.RangeMilliMeter);
-#endif
-      String tags[][2] = {};
-      String fields[][2] = {{"value", String(RangingMeasurementData.RangeMilliMeter)}};
-      publishMessage("/distance", tags,  ArrayCount(tags), fields, ArrayCount(fields));
+      distance = RangingMeasurementData.RangeMilliMeter;
     }
+#ifdef DEBUG_MESSAGE
+    Serial.print("/distance: ");
+    Serial.println(distance);
+#endif
+    String tags[][2] = {};
+    String fields[][2] = {{"value", String(distance)}};
+    publishMessage("/distance", tags,  ArrayCount(tags), fields, ArrayCount(fields));
   }
 }
 
