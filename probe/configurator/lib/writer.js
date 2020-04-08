@@ -56,7 +56,7 @@ module.exports = {
 	},
 	createSessionLog: (session) => {
 		return new Promise((resolve, reject) => {
-			fs.writeFile(`session-${session.id}.txt`, JSON.stringify(session), function(err) {
+			fs.writeFile(`session-${session.id}.json`, JSON.stringify(session), function(err) {
 				if (err) return console.log(err);
 				resolve(session);
 			});
