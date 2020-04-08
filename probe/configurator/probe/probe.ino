@@ -13,7 +13,7 @@ const char pass[] = SECRET_PASS;
 WiFiClient net;
 MQTTClient client;
 
-#ifdef MICROPHONE
+#ifdef SOUND
 #include <I2S.h>
 #include <movingAvg.h>
 movingAvg level(128);
@@ -52,7 +52,7 @@ int f1, f2, f3, f4;
 float accelX, accelY, accelZ;
 #endif
 
-#ifdef GYROMETER
+#ifdef GYROSCOPE
 float gyroX, gyroY, gyroZ;
 #endif
 
@@ -81,7 +81,7 @@ void app_main() {
   app.repeat(TEMPERATURE_SAMPLING_INTERVAL, sampleTemperature);
 #endif
 
-#ifdef MICROPHONE
+#ifdef SOUND
   level.begin();
   if (!I2S.begin(I2S_PHILIPS_MODE, 16000, 32)) {
     Serial.println("Failed to initialize I2S!");
@@ -101,7 +101,7 @@ void app_main() {
   Status = VL53L0X.VL53L0X_common_init();
   if (VL53L0X_ERROR_NONE != Status) {
     Serial.println("start vl53l0x mesurement failed!");
-    errorMessage("start vl53l0x mesurement failed!")
+    errorMessage("start vl53l0x mesurement failed!");
     VL53L0X.print_pal_error(Status);
   }
   VL53L0X.VL53L0X_single_ranging_init();
@@ -110,7 +110,7 @@ void app_main() {
     errorMessage("start vl53l0x mesurement failed!");
     VL53L0X.print_pal_error(Status);
   }
-  app.repeat(TOF_SAMPLING_INTERVAL, sampleToF);
+  app.repeat(TIME_OF_FLIGHT_SAMPLING_INTERVAL, sampleToF);
 #endif
 
 #ifdef HUMAN_PRESENCE
@@ -119,7 +119,7 @@ void app_main() {
     Serial.println("Device not found. Check wiring.");
     errorMessage("Device not found. Check wiring.");
   }
-  app.repeat(PRESENCE_SAMPLING_INTERVAL, sendPresence);
+  app.repeat(HUMAN_PRESENCE_SAMPLING_INTERVAL, sendPresence);
 #endif;
 
 #if defined(ACCELEROMETER) || defined(GYROSCOPE)
@@ -194,8 +194,8 @@ void loop_main() {
     connect(networkReconnect, brokerReconnect);
   }
 
-#ifdef MICROPHONE;
-  int reading = sample() - MICROPHONE_BASELINE;
+#ifdef SOUND;
+  int reading = sample() - SOUND_BASELINE;
   level.reading(reading);
 #ifdef DEBUG_AUDIO;
   Serial.print(reading);
@@ -209,19 +209,19 @@ void loop_main() {
 #endif;
 
 #ifdef ACCELEROMETER
-  float x, y, z;
+  float ax, ay, az;
   if (IMU.accelerationAvailable()) {
-    IMU.readAcceleration(x, y, z);
+    IMU.readAcceleration(ax, ay, az);
   }
-  accelX = x; accelY = y; accelZ = z;
+  accelX = ax; accelY = ay; accelZ = az;
 #endif
 
-#ifdef GYROMETER
-  float x, y, z;
+#ifdef GYROSCOPE
+  float gx, gy, gz;
   if (IMU.gyroscopeAvailable()) {
-    IMU.readGyroscope(x, y, z);
+    IMU.readGyroscope(gx, gy, gz);
   }
-  gyroX = x; gyroY = y; gyroZ = z;
+  gyroX = gx; gyroY = gy; gyroZ = gz;
 #endif
 }
 
@@ -253,6 +253,7 @@ void sampleLight() {
 
 #ifdef ANALOG_LIGHT
 int oldAnalogLightLevel = 0;
+#define LIGHT_PIN A0
 
 void sampleAnalogLight() {
   analogRead(LIGHT_PIN);
@@ -275,6 +276,7 @@ void sampleAnalogLight() {
 
 #ifdef TEMPERATURE
 
+#define TEMPERATURE_PIN A0
 const int B = 4275;               // B value of the thermistor
 const int R0 = 100000;            // R0 = 100k
 
@@ -297,11 +299,11 @@ void sampleTemperature() {
 #endif
 
 /*
-   MICROPHONE SAMPLING
+   SOUND SAMPLING
    -------------------
 */
 
-#ifdef MICROPHONE
+#ifdef SOUND
 
 void sampleSound() {
   int l = level.getAvg();
