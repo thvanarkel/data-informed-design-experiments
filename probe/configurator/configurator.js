@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const chalk = require('chalk');
 const clear = require('clear');
 const figlet = require('figlet');
@@ -44,7 +46,6 @@ const run = async () => {
 		editMode = true;
 		console.log("Loaded a session file!")
 		review = (await inquirer.reviewSession()).review;
-		console.log(review)
 	} else {
 		console.log("Let's start by configuring the information for this session.");
 	}
