@@ -14,7 +14,7 @@ const {
 
 const cron = require('node-cron');
 
-const directory = +'/media/pi/' + hostname + '/sensor-data';
+const directory = '/media/pi/' + hostname() + '/sensor-data';
 
 const dbClient = new InfluxDB({
 	url: process.env.HOST,
