@@ -60,7 +60,7 @@ BUCKET={InfluxDB-bucket-name}
 ```
 14. Install pm2 and run the collector script on startup
 ```
-$ npm install -g pm2
+$ sudo npm install -g pm2
 $ cd /home/pi/Documents/data-informed-design-experiments/collector
 $ pm2 start collector.js
 $ pm2 startup
