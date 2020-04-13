@@ -12,7 +12,7 @@
 5. Update Nodejs
 ```
 $ sudo su
-$ curl -sL https://deb.nodesource.com/setup_13x | bash -
+$ curl -sL https://deb.nodesource.com/setup_13.x | bash -
 $ apt-get install -y nodejs
 ```
 6. Install exFAT utils
@@ -40,10 +40,11 @@ allow_anonymous false
 ## c. Collector script
 12. Clone the repository
 ```
-$ git clone https:github.com/thvanarkel/data-informed-design-experiments
+$ git clone https://github.com/thvanarkel/data-informed-design-experiments
 ```
 13. Change to the collector directory, install and add the `.env` file
 ```
+$ cd data-informed-design-experiments/collector
 $ npm install
 $ touch .env
 $ nano .env
@@ -57,15 +58,11 @@ TOKEN={InfluxDB-token}
 ORG={InfluxDB-organisation}
 BUCKET={InfluxDB-bucket-name}
 ```
-14. Create sensor-data directory
-```
-$ cd Documents
-$ mkdir sensor-data
-```
-15. Install pm2 and run the collector script on startup
+14. Install pm2 and run the collector script on startup
 ```
 $ npm install -g pm2
-$ pm2 start /home/pi/Documents/data-informed-design-experiments/collector/collector.js
+$ cd /home/pi/Documents/data-informed-design-experiments/collector
+$ pm2 start collector.js
 $ pm2 startup
 $ pm2 save
 ```
