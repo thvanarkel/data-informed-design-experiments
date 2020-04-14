@@ -40,9 +40,9 @@ const drawCharts = async () => {
 	soundWindowBlock.draw()
 
 	data = await queryData("monitor", "-2h", "motion", "1m", "max");
-	motionWindow = new Chart(data, 200, "monitor/sound [1m](max)");
+	motionWindow = new Chart(data, 200, "monitor/motion [1m](max)");
 	motionWindow.draw()
-	motionWindowBlock = new BlockChart(data, 100, "monitor/sound [1m](max)");
+	motionWindowBlock = new BlockChart(data, 100, "monitor/motion [1m](max)");
 	motionWindowBlock.draw()
 }
 
