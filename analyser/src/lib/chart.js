@@ -14,6 +14,8 @@ class Chart {
 	}
 
 	draw() {
+
+		// console.log(this.data)
 		// 5. X scale will use the index of our data
 		var xScale = d3.scaleTime()
 			.domain([d3.min(this.data, d => d._time), d3.max(this.data, d => d._time)]) // input
@@ -55,7 +57,7 @@ class Chart {
 
 		// 9. Append the path, bind the data, and call the line generator
 		svg.append("path")
-			.datum(data) // 10. Binds data to the line
+			.datum(this.data) // 10. Binds data to the line
 			.attr("class", "line") // Assign a class for styling
 			.attr("d", line); // 11. Calls the line generator
 	}
@@ -123,7 +125,7 @@ class BlockChart {
 		// 	.call(d3.axisLeft(yScale)); // Create an axis component with d3.axisLeft
 
 		svg.selectAll('rect')
-			.data(data)
+			.data(this.data)
 			.enter()
 			.append('rect')
 			.attr('x', function(d) {
