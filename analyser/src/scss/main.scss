@@ -1,7 +1,12 @@
+$red: #EE3A2A;
+$light-red: #F7DDDC;
+
 /* Style the lines by removing the fill and applying a stroke */
+
+
 .line {
-    fill: none;
-    stroke: #ffab00;
+    fill: $light-red;
+    stroke: $red;
     stroke-width: 1;
 }
 
@@ -16,7 +21,11 @@
     stroke: #fff;
 }
 
-  .focus circle {
+.focus circle {
   fill: none;
   stroke: steelblue;
+}
+
+text {
+  font-family: Lars;
 }
