@@ -10,27 +10,39 @@ var querier = require("./lib/querier.js")
 const dotenv = require('dotenv').config()
 querier.config(process.env.URL, process.env.TOKEN, process.env.ORG);
 
-const run = async () => {
-	let rawQuery = 'from(bucket: "Test") |> range(start: -1h) |> filter(fn: (r) => r["thing"] == "monitor") |> filter(fn: (r) => r["_field"] == "value") |> filter(fn: (r) => r["_measurement"] == "sound") |> aggregateWindow(every: 2s, fn: mean)';
-	const rawData = await querier.query(rawQuery, {
+let thing = "monitor"
+let measurement = "sound"
+let fn = "max"
+let w = "2m"
+
+const queryData = async (thing, start, measurement, w, fn) => {
+	let q = `from(bucket: "Test") |> range(start: ${start}) |> filter(fn: (r) => r["thing"] == "${thing}") |> filter(fn: (r) => r["_field"] == "value") |> filter(fn: (r) => r["_measurement"] == "${measurement}") |> aggregateWindow(every: ${w}, fn: ${fn})`;
+	const data = await querier.query(q, {
 		rowParser(row) {
 			row._time = new Date(row._time);
 			return row;
 		}
 	});
-	var chart = new Chart(rawData, 200);
-	chart.draw();
-	let windowQuery = 'from(bucket: "Test") |> range(start: -1h) |> filter(fn: (r) => r["thing"] == "monitor") |> filter(fn: (r) => r["_field"] == "value") |> filter(fn: (r) => r["_measurement"] == "sound") |> aggregateWindow(every: 30s, fn: mean)';
-	const windowData = await querier.query(windowQuery, {
-		rowParser(row) {
-			row._time = new Date(row._time);
-			return row;
-		}
-	});
-	var windowChart = new Chart(windowData, 200);
-	windowChart.draw();
-	var blockChart = new BlockChart(windowData, 100);
-	blockChart.draw();
+	return data;
 }
 
-run();
+const drawCharts = async () => {
+	var data = await queryData("monitor", "-2h", "sound", "2s", "max");
+	console.log(data)
+	var soundRaw = new Chart(data, 200);
+	soundRaw.draw()
+
+	data = await queryData("monitor", "-2h", "sound", "1m", "max");
+	var soundWindow = new Chart(data, 200);
+	soundWindow.draw()
+	var soundWindowBlock = new BlockChart(data, 100);
+	soundWindowBlock.draw()
+
+	data = await queryData("monitor", "-2h", "motion", "1m", "max");
+	var motionWindow = new Chart(data, 200);
+	motionWindow.draw()
+	var motionWindowBlock = new BlockChart(data, 100);
+	motionWindowBlock.draw()
+}
+
+drawCharts();
