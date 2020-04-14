@@ -50,7 +50,7 @@ module.exports = {
 			},
 			{
 				name: 'password',
-				type: 'password',
+				type: 'input',
 				message: 'What is the SSID password:',
 				default: session.credentials && session.credentials.password,
 				validate: function(value) {
@@ -93,7 +93,7 @@ module.exports = {
 			},
 			{
 				name: 'password',
-				type: 'password',
+				type: 'input',
 				message: 'What is the password for the host:',
 				default: session.host && session.host.password,
 				validate: function(value) {
