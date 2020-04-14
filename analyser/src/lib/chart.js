@@ -46,7 +46,10 @@ class Chart {
 			.attr("width", this.width + this.margin.left + this.margin.right)
 			.attr("height", this.height + this.margin.top + this.margin.bottom)
 			.append("g")
-			.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
+			.attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")")
+
+		this.svg.append("path")
+			.attr("class", "line")
 
 		this.svg.append('text')
 			.text(this.title)
@@ -54,12 +57,13 @@ class Chart {
 
 		// 3. Call the x axis in a group tag
 		this.svg.append("g")
-			.attr("class", "x-axis")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + this.height + ")")
 			.call(this.xAxis); // Create an axis component with d3.axisBottom
 
 		// 4. Call the y axis in a group tag
 		this.svg.append("g")
-			.attr("class", "y-axis")
+			.attr("class", "y axis")
 			.call(this.yAxis); // Create an axis component with d3.axisLeft
 
 		// 9. Append the path, bind the data, and call the line generator
@@ -76,15 +80,18 @@ class Chart {
 			.domain([0, d3.max(this.data, d => d._value)]) // input
 			.range([this.height, 0]); // output
 
-		this.svg.selectAll("path")
+		this.xAxis = d3.axisBottom(this.xScale)
+		this.yAxis = d3.axisLeft(this.yScale)
+
+		this.svg.selectAll(".line")
 			.datum(this.data) // 10. Binds data to the line
 			.attr("class", "line") // Assign a class for styling
 			.attr("d", this.line); // 11. Calls the line generator
 
-		this.svg.select('x-axis')
+		this.svg.select('.x.axis')
 			.call(this.xAxis);
 
-		this.svg.select('y-axis')
+		this.svg.select('.y.axis')
 			.call(this.yAxis);
 	}
 }
@@ -125,9 +132,9 @@ class BlockChart {
 
 		// 3. Call the x axis in a group tag
 		this.svg.append("g")
-			.attr("class", "x-axis")
+			.attr("class", "x axis")
 			.attr("transform", "translate(0," + this.height + ")")
-			.call(this.xAxis); // Create an axis component with d3.axisBottom
+			.call(this.xAxis);
 
 		// // 4. Call the y axis in a group tag
 		// svg.append("g")
@@ -160,6 +167,7 @@ class BlockChart {
 		// 	.duration(750)
 		// 	.call(xAxis);
 
+		this.xAxis = d3.axisBottom(this.xScale)
 
 		this.svg.selectAll('rect')
 			.data(this.data)
@@ -175,7 +183,7 @@ class BlockChart {
 				return this.colorScale(d._value);
 			}).bind(this))
 
-		this.svg.select('x-axis')
+		this.svg.select('.x.axis')
 			.call(this.xAxis)
 	}
 }
