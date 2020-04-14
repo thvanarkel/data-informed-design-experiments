@@ -1,8 +1,9 @@
 "use strict";
 
-
-
-var Chart = require("./lib/chart.js");
+var {
+	Chart,
+	BlockChart
+} = require("./lib/chart.js");
 
 
 const dotenv = require('dotenv').config()
@@ -39,13 +40,13 @@ queryApi.queryRows(fluxQuery, {
 	complete() {
 		console.log('\nFinished SUCCESS');
 		console.log(data)
-		var chart = new Chart(data);
+		var chart = new Chart(data, 200);
 		chart.draw();
-		query();
+		query1();
 	},
 });
 
-var query = () => {
+var query1 = () => {
 	data = [];
 	fluxQuery = 'from(bucket: "Test") |> range(start: -1h) |> filter(fn: (r) => r["thing"] == "monitor") |> filter(fn: (r) => r["_field"] == "value") |> filter(fn: (r) => r["_measurement"] == "sound") |> aggregateWindow(every: 30s, fn: mean)';
 
@@ -62,7 +63,31 @@ var query = () => {
 		complete() {
 			console.log('\nFinished SUCCESS');
 			console.log(data)
-			var chart = new Chart(data);
+			var chart = new Chart(data, 200);
+			chart.draw();
+			query2();
+		},
+	});
+}
+
+var query2 = () => {
+	data = [];
+	fluxQuery = 'from(bucket: "Test") |> range(start: -1h) |> filter(fn: (r) => r["thing"] == "monitor") |> filter(fn: (r) => r["_field"] == "value") |> filter(fn: (r) => r["_measurement"] == "sound") |> aggregateWindow(every: 30s, fn: mean)';
+
+	queryApi.queryRows(fluxQuery, {
+		next(row, tableMeta) {
+			const o = tableMeta.toObject(row);
+			o._time = new Date(o._time);
+			data.push(o);
+		},
+		error(error) {
+			console.error(error);
+			console.log('\nFinished ERROR');
+		},
+		complete() {
+			console.log('\nFinished SUCCESS');
+			console.log(data)
+			var chart = new BlockChart(data, 100);
 			chart.draw();
 		},
 	});

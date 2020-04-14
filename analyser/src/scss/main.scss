@@ -1,6 +1,11 @@
 $red: #EE3A2A;
 $light-red: #F7DDDC;
 
+
+body {
+  margin-top: 25px;
+}
+
 /* Style the lines by removing the fill and applying a stroke */
 
 
@@ -28,4 +33,12 @@ $light-red: #F7DDDC;
 
 text {
   font-family: Lars;
+}
+
+.block-chart {
+  rect {
+    fill: $red;
+    stroke: $red;
+    stroke-width: 1;
+  }
 }

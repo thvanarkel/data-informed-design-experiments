@@ -1,3 +1,7 @@
+body {
+  margin-top: 25px;
+}
+
 /* Style the lines by removing the fill and applying a stroke */
 .line {
   fill: #F7DDDC;
@@ -23,6 +27,12 @@
 
 text {
   font-family: Lars;
+}
+
+.block-chart rect {
+  fill: #EE3A2A;
+  stroke: #EE3A2A;
+  stroke-width: 1;
 }
 
 /*# sourceMappingURL=index.css.map */
