@@ -1,27 +1,22 @@
-svg {
-  font: 10px sans-serif;
+/* Style the lines by removing the fill and applying a stroke */
+.line {
+    fill: none;
+    stroke: #ffab00;
+    stroke-width: 1;
 }
 
-.area {
-  fill: lightgray;
-  clip-path: url(#clip);
-}
-
-.axis path,
-.axis line {
+.overlay {
   fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
+  pointer-events: all;
 }
 
-.brush .extent {
-  stroke: #fff;
-  fill-opacity: .125;
-  shape-rendering: crispEdges;
-  clip-path: url(#clip);
+/* Style the dots by assigning a fill and stroke */
+.dot {
+    fill: #ffab00;
+    stroke: #fff;
 }
 
-rect.pane {
-  cursor: move;
+  .focus circle {
   fill: none;
+  stroke: steelblue;
 }
