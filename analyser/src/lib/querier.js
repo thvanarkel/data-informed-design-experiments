@@ -15,10 +15,8 @@ module.exports = {
 		}).getQueryApi(org);
 	},
 	query: (q, f) => {
-		console.log("test")
 		return new Promise((resolve, reject) => {
 			let data = [];
-			console.log("test")
 			queryApi.queryRows(q, {
 				next(row, tableMeta) {
 					let o = tableMeta.toObject(row);

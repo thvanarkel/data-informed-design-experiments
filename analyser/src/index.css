@@ -2,6 +2,10 @@ body {
   margin-top: 25px;
 }
 
+svg {
+  margin-bottom: 10px;
+}
+
 /* Style the lines by removing the fill and applying a stroke */
 .line {
   fill: #F7DDDC;
