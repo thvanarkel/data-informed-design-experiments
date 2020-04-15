@@ -69,4 +69,4 @@ const drawCharts = async () => {
 // }
 
 drawCharts();
-setInterval(updateCharts, 30000);
+// setInterval(updateCharts, 30000);
