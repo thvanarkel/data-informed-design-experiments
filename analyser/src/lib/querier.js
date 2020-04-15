@@ -29,7 +29,6 @@ module.exports = {
 					return console.log(error);
 				},
 				complete() {
-					console.log('\nFinished SUCCESS');
 					resolve(data)
 				},
 			});

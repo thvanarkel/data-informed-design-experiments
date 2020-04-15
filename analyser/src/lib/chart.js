@@ -3,7 +3,7 @@ var d3 = require("d3");
 class Chart {
 	hasYAxis = true;
 
-	constructor(data, height, title) {
+	constructor(card, data, height, title) {
 		this.data = data;
 		this.margin = {
 			top: 30,
@@ -14,12 +14,22 @@ class Chart {
 		this.width = window.innerWidth - this.margin.left - this.margin.right;
 		this.height = height - this.margin.top - this.margin.bottom;
 		this.title = title;
+		this.card = card
 
 		this.draw();
 	}
 
+	get data() {
+		return this._data;
+	}
+
+	set data(d) {
+		this._data = d;
+		if (this.initialised) this.update();
+	}
+
 	draw() {
-		this.svg = d3.select("body").append("svg")
+		this.svg = d3.select(this.card).append("svg")
 			.attr("width", this.width + this.margin.left + this.margin.right)
 			.attr("height", this.height + this.margin.top + this.margin.bottom)
 			.append("g")
@@ -41,6 +51,7 @@ class Chart {
 
 		this.updateXAxis();
 		if (this.hasYAxis) this.updateYAxis();
+		this.initialised = true;
 	}
 
 	update() {
@@ -49,6 +60,7 @@ class Chart {
 	}
 
 	updateXAxis() {
+		console.log(this.data)
 		this.xScale = d3.scaleTime()
 			.domain([d3.min(this.data, d => d._time), d3.max(this.data, d => d._time)]) // input
 			.range([0, this.width]) // output

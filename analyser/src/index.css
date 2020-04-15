@@ -2,6 +2,10 @@ body {
   margin-top: 25px;
 }
 
+.card {
+  background-color: grey;
+}
+
 svg {
   margin-bottom: 10px;
 }
