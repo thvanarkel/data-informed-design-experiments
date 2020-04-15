@@ -1,7 +1,7 @@
 "use strict";
 
 var {
-	Chart,
+	LineChart,
 	BlockChart
 } = require("./lib/chart.js");
 
@@ -26,44 +26,47 @@ const queryData = async (thing, start, measurement, w, fn) => {
 	return data;
 }
 
-var soundRaw, soundWindow, soundWindowBlock, motionWindow, motionWindowBlock;
+var soundRaw, soundWindow, soundWindowBlock, motionWindow, motionWindowBlock, bedWindow, bedWindowBlock, bedSoundWindow, bedSoundWindowBlock
 
 const drawCharts = async () => {
 	var data = await queryData("monitor", "-2h", "sound", "2s", "max");
-	soundRaw = new Chart(data, 200, "monitor/sound [2s](max)");
+	soundRaw = new LineChart(data, 200, "monitor/sound [2s](max)");
 	soundRaw.draw()
 
 	data = await queryData("monitor", "-2h", "sound", "1m", "max");
-	soundWindow = new Chart(data, 200, "monitor/sound [1m](max)");
-	soundWindow.draw()
+	soundWindow = new LineChart(data, 200, "monitor/sound [1m](max)");
 	soundWindowBlock = new BlockChart(data, 100, "monitor/sound [1m](max)");
-	soundWindowBlock.draw()
 
 	data = await queryData("monitor", "-2h", "motion", "1m", "max");
-	motionWindow = new Chart(data, 200, "monitor/motion [1m](max)");
-	motionWindow.draw()
+	motionWindow = new LineChart(data, 200, "monitor/motion [1m](max)");
 	motionWindowBlock = new BlockChart(data, 100, "monitor/motion [1m](max)");
-	motionWindowBlock.draw()
+
+	data = await queryData("bed", "-2h", "motion", "1m", "max");
+	bedWindow = new LineChart(data, 200, "bed/motion [1m](max)");
+	bedWindowBlock = new BlockChart(data, 100, "bed/motion [1m](max)");
+	data = await queryData("bed", "-2h", "sound", "1m", "max");
+	bedSoundWindow = new LineChart(data, 200, "bed/sound [1m](max)");
+	bedSoundWindowBlock = new BlockChart(data, 100, "bed/sound [1m](max)");
 }
 
-const updateCharts = async () => {
-	console.log("updating");
-	var data = await queryData("monitor", "-2h", "sound", "2s", "max");
-	soundRaw.data = data;
-	soundRaw.update()
-
-	data = await queryData("monitor", "-2h", "sound", "1m", "max");
-	soundWindow.data = data;
-	soundWindow.update()
-	soundWindowBlock.data = data;
-	soundWindowBlock.update()
-
-	data = await queryData("monitor", "-2h", "motion", "1m", "max");
-	motionWindow.data = data;
-	motionWindow.update()
-	motionWindowBlock.data = data;
-	motionWindowBlock.update()
-}
+// const updateCharts = async () => {
+// 	console.log("updating");
+// 	var data = await queryData("monitor", "-2h", "sound", "2s", "max");
+// 	soundRaw.data = data;
+// 	soundRaw.update()
+//
+// 	data = await queryData("monitor", "-2h", "sound", "1m", "max");
+// 	soundWindow.data = data;
+// 	soundWindow.update()
+// 	soundWindowBlock.data = data;
+// 	soundWindowBlock.update()
+//
+// 	data = await queryData("monitor", "-2h", "motion", "1m", "max");
+// 	motionWindow.data = data;
+// 	motionWindow.update()
+// 	motionWindowBlock.data = data;
+// 	motionWindowBlock.update()
+// }
 
 drawCharts();
 setInterval(updateCharts, 30000);

@@ -12,6 +12,14 @@ class Chart {
 		this.width = window.innerWidth - this.margin.left - this.margin.right;
 		this.height = height - this.margin.top - this.margin.bottom;
 		this.title = title;
+
+		this.draw();
+	}
+}
+
+class LineChart extends Chart {
+	constructor(data, height, title) {
+		super(data, height, title);
 	}
 
 	draw() {
@@ -20,15 +28,17 @@ class Chart {
 		// 5. X scale will use the index of our data
 		this.xScale = d3.scaleTime()
 			.domain([d3.min(this.data, d => d._time), d3.max(this.data, d => d._time)]) // input
-			.range([0, this.width]); // output
+			.range([0, this.width]) // output
 
 		// 6. Y scale will use the randomly generate number
 		this.yScale = d3.scaleLinear()
 			.domain([0, d3.max(this.data, d => d._value)]) // input
-			.range([this.height, 0]); // output
+			.range([this.height, 0]) // output
 
 		this.xAxis = d3.axisBottom(this.xScale)
+			.ticks(5)
 		this.yAxis = d3.axisLeft(this.yScale)
+			.ticks(5)
 
 		// 7. d3's line generator
 		this.line = d3.area()
@@ -81,7 +91,9 @@ class Chart {
 			.range([this.height, 0]); // output
 
 		this.xAxis = d3.axisBottom(this.xScale)
+			.ticks(8)
 		this.yAxis = d3.axisLeft(this.yScale)
+			.ticks(5)
 
 		this.svg.selectAll(".line")
 			.datum(this.data) // 10. Binds data to the line
@@ -96,18 +108,9 @@ class Chart {
 	}
 }
 
-class BlockChart {
+class BlockChart extends Chart {
 	constructor(data, height, title) {
-		this.data = data;
-		this.margin = {
-			top: 30,
-			right: 50,
-			bottom: 20,
-			left: 50
-		};
-		this.width = window.innerWidth - this.margin.left - this.margin.right;
-		this.height = height - this.margin.top - this.margin.bottom;
-		this.title = title;
+		super(data, height, title);
 	}
 
 	draw() {
@@ -189,6 +192,6 @@ class BlockChart {
 }
 
 module.exports = {
-	Chart,
+	LineChart,
 	BlockChart
 }
