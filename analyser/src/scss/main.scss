@@ -1,13 +1,14 @@
 $red: #EE3A2A;
 $light-red: #F7DDDC;
-
+$light-grey: #CBCDCF;
 
 body {
   margin-top: 25px;
 }
 
 .card {
-  background-color: grey;
+  margin: 10px 0;
+  border: $light-grey 1px solid;
 }
 
 svg {

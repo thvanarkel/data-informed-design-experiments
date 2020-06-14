@@ -60,7 +60,6 @@ class Chart {
 	}
 
 	updateXAxis() {
-		console.log(this.data)
 		this.xScale = d3.scaleTime()
 			.domain([d3.min(this.data, d => d._time), d3.max(this.data, d => d._time)]) // input
 			.range([0, this.width]) // output
@@ -85,8 +84,8 @@ class Chart {
 }
 
 class LineChart extends Chart {
-	constructor(data, height, title) {
-		super(data, height, title, true);
+	constructor(card, data, height, title) {
+		super(card, data, height, title);
 		this.hasYAxis = true;
 	}
 
@@ -124,8 +123,8 @@ class LineChart extends Chart {
 }
 
 class BlockChart extends Chart {
-	constructor(data, height, title) {
-		super(data, height, title);
+	constructor(card, data, height, title) {
+		super(card, data, height, title);
 		this.hasYAxis = false;
 	}
 

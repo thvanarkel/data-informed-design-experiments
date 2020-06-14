@@ -3,7 +3,8 @@ body {
 }
 
 .card {
-  background-color: grey;
+  margin: 10px 0;
+  border: #CBCDCF 1px solid;
 }
 
 svg {
