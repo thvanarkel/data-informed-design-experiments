@@ -29,9 +29,19 @@ import React from 'react';
 import { Button } from 'antd';
 import './App.less';
 
+import { Layout } from 'antd';
+const { Sider, Content } = Layout;
+
+
 const App = () => (
   <div className="App">
-    <Button type="primary">Button</Button>
+  <Layout>
+    <Sider className="sider" width="300" theme="light">Experiment</Sider>
+      <Layout>
+        <Content>Content</Content>
+        <Button type="primary">Button</Button>
+      </Layout>
+    </Layout>
   </div>
 );
 
