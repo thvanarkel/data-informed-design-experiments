@@ -6,7 +6,6 @@ const {
 
 let queryApi;
 
-
 module.exports = {
 	config: (url, token, org) => {
 		queryApi = new InfluxDB({

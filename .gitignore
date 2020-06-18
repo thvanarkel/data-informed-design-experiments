@@ -14,3 +14,4 @@ probe/configurator/probe/configuration.h
 probe/configurator/probe/configuration_template.h
 probe/configurator/probe/probe.arduino.samd.nano_33_iot.elf
 probe/configurator/probe/probe.arduino.samd.nano_33_iot.bin
+experiment-studio/.env
