@@ -38,7 +38,7 @@ class BarChart extends Component {
 		// console.log(this.props.data);
 		if (this.props.width != prevProps.width) {
 			this.width = this.props.width - this.margin.left - this.margin.right;
-			this.svg.attr("width", this.width + this.margin.left + this.margin.right);
+			d3.select(this.svg.node().parentNode).attr("width", this.width + this.margin.left + this.margin.right);
 		}
 		if (!this.state.data.length) {
 			return;
@@ -152,7 +152,7 @@ class BarChart extends Component {
 		// `;
 		// <style jsx>{style}</style>
     return (
-			<div id={"graph-" + this.props.index}></div>
+			<div className="graph" id={"graph-" + this.props.index}></div>
 		)
   }
 }

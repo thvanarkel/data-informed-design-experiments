@@ -21,7 +21,6 @@ export function useLocallyPersistedReducer(reducer, defaultState, storageKey, in
   })
 
   React.useEffect(() => {
-    console.log("Store data")
     localStorage.setItem(storageKey, JSON.stringify(hookVars[0]))
   }, [storageKey, hookVars[0]])
 

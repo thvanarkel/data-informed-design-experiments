@@ -1,5 +1,33 @@
 @import '~antd/dist/antd.less';
 
+// Color scheme
+@white:           #FFFFFF;
+@dark:            #00004C;
+@grey-1:          #F3F3F6;
+@grey-2:          #E2E2E9;
+@grey-3:          #C9C9D4;
+@grey-4:          #B5B5BF;
+@grey-5:          #797986;
+@grey-6:          #4C4C57;
+
+@purple:          #715CF9;
+@purple-light:    #F0F0FE;
+@blue:            #23B2FE;
+@blue-light:      #E9F7FE;
+@green:           #00D692;
+@green-light:     #E9FBF4;
+@yellow:          #FEBC2D;
+@yellow-light:    #FFF8EC;
+@red:             #E4525A;
+@red-light:       #FCEEEF;
+@magenta:         #DD0C75;
+@magenta-light:   #FBE8F1;
+@peach:           #FF65FF;
+@peach-light:     #FFF0F2;
+@mauve:           #B56EF5;
+@mauve-light:     #F3E6FD;
+
+
 .App {
   // text-align: center;
 }
@@ -57,8 +85,9 @@
 
 .data-card {
   margin-bottom: 10px;
-  background-color: #FCEEEF;
   border-radius: 5px;
+  background-color: @grey-1;
+  color: @dark;
   overflow: hidden;
   .card-header {
     display: flex;
@@ -67,12 +96,52 @@
   .ant-card-body {
     padding: 0;
   }
+  .graph {
+    line-height: normal;
+  }
+
+  svg {
+    .line {
+      fill: @dark;
+      stroke: @dark;
+      stroke-width: 1;
+    }
+  }
+  &.purple {
+    .color-scheme(@purple, @purple-light)
+  }
+  &.blue {
+    .color-scheme(@blue, @blue-light)
+  }
+  &.green {
+    .color-scheme(@green, @green-light)
+  }
+  &.yellow {
+    .color-scheme(@yellow, @yellow-light)
+  }
+  &.red {
+    .color-scheme(@red, @red-light);
+  }
+  &.magenta {
+    .color-scheme(@magenta, @magenta-light);
+  }
+  &.peach {
+    .color-scheme(@peach, @peach-light);
+  }
+  &.mauve {
+    .color-scheme(@mauve, @mauve-light);
+  }
+
+
 }
 
-svg {
-  .line {
-		fill: #E4525A;
-		stroke: #E4525A;
-		stroke-width: 1;
-	}
+.color-scheme(@color, @color-light) {
+  background-color: @color-light;
+  color: @color;
+  svg {
+    .line {
+      fill: @color;
+      stroke: @color;
+    }
+  }
 }

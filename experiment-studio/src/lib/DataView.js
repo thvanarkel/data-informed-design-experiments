@@ -60,7 +60,7 @@ export default function DataView() {
   return (
     <div ref={ref}>
       <Header loading={loading} uptime={uptime} fetch={fetch} />
-
+      <Divider />
       <Divider />
       {data.map((d,i) => {
         return <DataCard key={i} data={d} index={i} width={dimensions.width} onRemove={removeCard} />
