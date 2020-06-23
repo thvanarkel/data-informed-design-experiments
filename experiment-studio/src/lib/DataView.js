@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import Header from './Header'
 import DataCard from './DataCard'
 import {
@@ -52,9 +53,9 @@ export default function DataView() {
 
   const [ref, dimensions] = useDimensions();
 
-  const removeCard = (i) => {
-    console.log(i);
+  const removeCard = (i, e) => {
     setData({index: i, type: "remove"})
+    console.log(e.item.node)
   }
 
   return (

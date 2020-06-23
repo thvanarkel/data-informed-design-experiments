@@ -1,6 +1,25 @@
 import React, { Component } from 'react';
 import * as d3 from 'd3';
 
+class Chart extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			data: this.parseData(props.data),
+		}
+		this.margin = {
+			top: 10,
+			right: 10,
+			bottom: 20,
+			left: 30
+		};
+		this.hasYAxis = props.yAxis !== undefined ? props.yAxis : false;
+		if (!this.hasYAxis) this.margin.left = 10;
+		this.width = props.width - this.margin.left - this.margin.right;
+		this.height = props.height - this.margin.top - this.margin.bottom;
+	}
+}
+
 class BarChart extends Component {
 	constructor(props) {
 		super(props);
@@ -13,9 +32,12 @@ class BarChart extends Component {
 			bottom: 20,
 			left: 30
 		};
+		this.hasYAxis = props.yAxis !== undefined ? props.yAxis : true;
+		if (!this.hasYAxis) this.margin.left = 10;
 		this.width = props.width - this.margin.left - this.margin.right;
 		this.height = props.height - this.margin.top - this.margin.bottom;
-		this.hasYAxis = true;
+		console.log(props.yAxis);
+
 	}
 
 	parseData(d) {
@@ -26,6 +48,7 @@ class BarChart extends Component {
 	}
 
   componentDidMount() {
+		if (this.props.index == 0) console.log("component mounted");
 		this.svg = d3.select('#graph-' + this.props.index ).append("svg")
 			.attr("width", this.width + this.margin.left + this.margin.right)
 			.attr("height", this.height + this.margin.top + this.margin.bottom)
@@ -35,7 +58,7 @@ class BarChart extends Component {
   }
 
 	componentDidUpdate(prevProps) {
-		// console.log(this.props.data);
+		if (this.props.index == 0) console.log("graph did update");
 		if (this.props.width != prevProps.width) {
 			this.width = this.props.width - this.margin.left - this.margin.right;
 			d3.select(this.svg.node().parentNode).attr("width", this.width + this.margin.left + this.margin.right);
@@ -43,6 +66,7 @@ class BarChart extends Component {
 		if (!this.state.data.length) {
 			return;
 		}
+		this.state.data = this.props.data;
 		this.update();
 	}
 
@@ -80,7 +104,9 @@ class BarChart extends Component {
 		}
 
 		this.updateXAxis();
-		if (this.hasYAxis) this.updateYAxis();
+		// if (this.hasYAxis)
+		console.log(this.hasYAxis)
+		this.updateYAxis();
 		this.initialised = true;
 
 		// FROM LineGraph -> draw()
@@ -106,7 +132,7 @@ class BarChart extends Component {
 
 	update() {
 		this.updateXAxis();
-		if (this.hasYAxis) this.updateYAxis();
+		this.updateYAxis();
 
 		// console.log(this.height)
 		// FROM LineGraph -> update()

@@ -1,10 +1,10 @@
 import React from 'react';
-import { Card } from 'antd';
+import { Card, Dropdown, Menu } from 'antd';
 import Graph from './Graph';
 import moment from 'moment';
-import { CloseOutlined } from '@ant-design/icons';
+import { DeleteOutlined, MoreOutlined } from '@ant-design/icons';
 
-const closeIcon = <CloseOutlined style={{ fontSize: 12 }} />;
+// const closeIcon = <CloseOutlined style={{ fontSize: 12 }} />;
 
 export default function DataCard(props) {
 
@@ -13,42 +13,37 @@ export default function DataCard(props) {
     return d;
   }
 
-  const color = () => {
-    switch(props.index) {
-      case 0:
-        return " purple";
-        break;
-      case 1:
-        return " blue";
-        break;
-      case 2:
-        return " green";
-        break;
-      case 3:
-        return " yellow";
-        break;
-      case 4:
-        return " red";
-        break;
-      case 5:
-        return " magenta";
-        break;
-      case 6:
-        return " peach";
-        break;
-      case 7:
-        return " mauve";
-        break;
-      default:
-        return "";
-        break;
-    }
-  };
+  const menu = (
+    <Menu style={{ transform: `translateY(-0px)` }}>
+      <Menu.Item>
+        <a target="_blank" rel="noopener noreferrer" href="http://www.alipay.com/">
+          1st menu item
+        </a>
+      </Menu.Item>
+      <Menu.Item>
+        <a target="_blank" rel="noopener noreferrer" href="http://www.taobao.com/">
+          2nd menu item
+        </a>
+      </Menu.Item>
+      <Menu.Item>
+        <a target="_blank" rel="noopener noreferrer" href="http://www.tmall.com/">
+          3rd menu item
+        </a>
+      </Menu.Item>
+      <Menu.Item danger onClick={(e) => props.onRemove(props.index, e)}><DeleteOutlined />Remove card</Menu.Item>
+    </Menu>
+  );
+
+  const dropdown = (
+    <Dropdown overlay={menu}>
+      <MoreOutlined style={{ fontSize: 20, transform: `translate(-15px, -10px) rotate(90deg)` }} />
+    </Dropdown>
+  );
 
   return(
-    <Card className={"data-card" + color()}>
-      <div className="card-header"><p>{getDate()}</p><CloseOutlined onClick={() => props.onRemove(props.index)} style={{ fontSize: 14 }} /></div>
-      <Graph data={props.data} index={props.index} width={props.width} height={100} />
+    <Card className="data-card">
+      <div className="card-header"><p>{getDate()}</p>{dropdown}</div>
+      <Graph data={props.data} yAxis={false} index={props.index} width={props.width} height={100} />
     </Card>
   );
 }
