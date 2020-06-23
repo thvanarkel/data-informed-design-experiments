@@ -5,7 +5,7 @@ class BarChart extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			data: props.data,
+			data: this.parseData(props.data),
 		}
 		this.margin = {
 			top: 10,
@@ -16,6 +16,13 @@ class BarChart extends Component {
 		this.width = props.width - this.margin.left - this.margin.right;
 		this.height = props.height - this.margin.top - this.margin.bottom;
 		this.hasYAxis = true;
+	}
+
+	parseData(d) {
+		for (const e of d) {
+			e._time = new Date(e._time)
+		}
+		return d;
 	}
 
   componentDidMount() {
@@ -33,7 +40,7 @@ class BarChart extends Component {
 			this.width = this.props.width - this.margin.left - this.margin.right;
 			this.svg.attr("width", this.width + this.margin.left + this.margin.right);
 		}
-		if (!this.props.data.length) {
+		if (!this.state.data.length) {
 			return;
 		}
 		this.update();
@@ -88,7 +95,7 @@ class BarChart extends Component {
 			.y1((function(d) {
 				return this.yScale(d._value);
 			}).bind(this)) // set the y values for the line generator
-			.curve(d3.curveMonotoneX) // apply smoothing to the line
+			.curve(d3.curveBasis) // apply smoothing to the line
 
 		// Name the SVG
 		this.svg.attr('class', 'line-chart')
@@ -101,17 +108,17 @@ class BarChart extends Component {
 		this.updateXAxis();
 		if (this.hasYAxis) this.updateYAxis();
 
-		console.log(this.height)
+		// console.log(this.height)
 		// FROM LineGraph -> update()
 		this.svg.selectAll(".line")
-			.datum(this.props.data) // 10. Binds data to the line
+			.datum(this.state.data) // 10. Binds data to the line
 			.attr("class", "line") // Assign a class for styling
 			.attr("d", this.line); // 11. Calls the line generator
 		}
 
 		updateXAxis() {
 			this.xScale = d3.scaleTime()
-				.domain([d3.min(this.props.data, d => d._time), d3.max(this.props.data, d => d._time)]) // input
+				.domain([d3.min(this.state.data, d => d._time), d3.max(this.state.data, d => d._time)]) // input
 				.range([0, this.width]) // output
 
 			this.xAxis = d3.axisBottom(this.xScale)
@@ -123,7 +130,7 @@ class BarChart extends Component {
 
 		updateYAxis() {
 			this.yScale = d3.scaleLinear()
-				.domain([0, d3.max(this.props.data, d => d._value)]) // input
+				.domain([0, d3.max(this.state.data, d => d._value)]) // input
 				.range([this.height, 0]) // output
 
 			this.yAxis = d3.axisLeft(this.yScale)
