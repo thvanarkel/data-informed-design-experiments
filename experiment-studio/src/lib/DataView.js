@@ -47,7 +47,7 @@ export default function DataView() {
 
   const fetch = (thing, stream, dateRange, timeRange) => {
     console.log("fetch")
-    setData({type: "clear"})
+    // setData({type: "clear"})
     dataProcessor.fetch(thing, stream, dateRange, timeRange, processData, setLoading, setUptime)
   }
 

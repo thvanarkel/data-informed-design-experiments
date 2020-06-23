@@ -36,6 +36,7 @@ class Chart extends Component {
   }
 
 	componentDidUpdate(prevProps) {
+
 		if (this.props.width != prevProps.width) {
 			this.width = this.props.width - this.margin.left - this.margin.right;
 			d3.select(this.svg.node().parentNode).attr("width", this.width + this.margin.left + this.margin.right);
@@ -135,4 +136,70 @@ class BarChart extends Chart {
 		}
 }
 
-export default BarChart;
+class BlockChart extends Chart {
+	constructor(props) {
+		super(props)
+	}
+
+  drawChart() {
+		super.drawChart();
+
+		this.svg.attr('class', 'block-chart')
+
+		var bars = this.svg.selectAll('rect')
+			.data(this.state.data)
+			.enter()
+			.append('rect')
+			.attr('x', (function(d, i) {
+				return this.xScale(d._time);
+			}).bind(this))
+			.attr('y', (function(d) {
+				return  0.5 * (this.height - this.yScale(d._value));
+			}).bind(this))
+			.attr('height', (function(d) {
+				return this.yScale(d._value);
+			}).bind(this))
+			.attr('width', 2)
+
+		this.update();
+	}
+
+	updateYAxis() {
+		this.yScale = d3.scaleLinear()
+			.domain([0, d3.max(this.state.data, d => d._value)]) // input
+			.range([10, this.height]) // output
+
+		this.yAxis = d3.axisLeft(this.yScale)
+			.ticks(5)
+
+		this.svg.select('.y.axis')
+			.call(this.yAxis)
+	}
+
+	componentDidUpdate(prevProps) {
+		super.componentDidUpdate(prevProps);
+		this.update();
+	}
+
+	update() {
+		super.update();
+
+		this.svg.selectAll('rect')
+			.attr('x', (function(d, i) {
+				return this.xScale(d._time);
+			}).bind(this))
+
+			// .attr('fill-opacity', (function(d) {
+			// 	return this.colorScale(d._value);
+			// }).bind(this))
+	}
+
+	// colorSchale() {
+	// 	return d3.scaleLinear()
+	// 		.domain([d3.min(this.state.data, d => d._value), d3.max(this.state.data, d => d._value)])
+	// 		.range([0.0, 1.0]);
+	// }
+
+}
+
+export { BarChart, BlockChart };

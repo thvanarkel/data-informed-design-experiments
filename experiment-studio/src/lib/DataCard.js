@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Dropdown, Menu } from 'antd';
-import Graph from './Graph';
+import { BarChart, BlockChart } from './Chart';
 import moment from 'moment';
 import { DeleteOutlined, MoreOutlined } from '@ant-design/icons';
 
@@ -43,7 +43,8 @@ export default function DataCard(props) {
   return(
     <Card className="data-card">
       <div className="card-header"><p>{getDate()}</p>{dropdown}</div>
-      <Graph data={props.data} yAxis={true} index={props.index} width={props.width} height={100} />
+      <BlockChart data={props.data} yAxis={true} index={props.index} width={props.width} height={100} />
+      <BarChart data={props.data} yAxis={true} index={props.index} width={props.width} height={100} />
     </Card>
   );
 }
