@@ -43,7 +43,7 @@ export default function DataCard(props) {
   return(
     <Card className="data-card">
       <div className="card-header"><p>{getDate()}</p>{dropdown}</div>
-      <Graph data={props.data} yAxis={false} index={props.index} width={props.width} height={100} />
+      <Graph data={props.data} yAxis={true} index={props.index} width={props.width} height={100} />
     </Card>
   );
 }
