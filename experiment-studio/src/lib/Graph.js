@@ -16,8 +16,6 @@ class BarChart extends Component {
 		this.width = props.width - this.margin.left - this.margin.right;
 		this.height = props.height - this.margin.top - this.margin.bottom;
 		this.hasYAxis = true;
-
-
 	}
 
   componentDidMount() {
@@ -29,8 +27,12 @@ class BarChart extends Component {
     this.drawChart();
   }
 
-	componentDidUpdate() {
+	componentDidUpdate(prevProps) {
 		// console.log(this.props.data);
+		if (this.props.width != prevProps.width) {
+			this.width = this.props.width - this.margin.left - this.margin.right;
+			this.svg.attr("width", this.width + this.margin.left + this.margin.right);
+		}
 		if (!this.props.data.length) {
 			return;
 		}
@@ -86,7 +88,7 @@ class BarChart extends Component {
 			.y1((function(d) {
 				return this.yScale(d._value);
 			}).bind(this)) // set the y values for the line generator
-			.curve(d3.curveStepAfter) // apply smoothing to the line
+			.curve(d3.curveMonotoneX) // apply smoothing to the line
 
 		// Name the SVG
 		this.svg.attr('class', 'line-chart')
@@ -131,17 +133,19 @@ class BarChart extends Component {
 				.call(this.yAxis)
 		}
 
+
+
   render(){
+		// const style = `
+		// 	.line {
+		// 		fill: #F7DDDC;
+		// 		stroke: #EE3A2A;
+		// 		stroke-width: 1;
+		// 	}
+		// `;
+		// <style jsx>{style}</style>
     return (
-			<div id={"graph-" + this.props.index}>
-				<style jsx global>{`
-					.line {
-	    			fill: #F7DDDC;
-	    			stroke: #EE3A2A;
-	    			stroke-width: 1;
-					}
-	      `}</style>
-			</div>
+			<div id={"graph-" + this.props.index}></div>
 		)
   }
 }

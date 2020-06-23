@@ -32,7 +32,7 @@ export default function DataView() {
 
       <Divider />
       {data.map((d,i) => {
-        return <DataCard data={d} index={i} width={dimensions.width} />
+        return <DataCard key={"card-" + i} data={d} index={i} width={dimensions.width} />
       })}
     </div>
   )
