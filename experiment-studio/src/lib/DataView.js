@@ -14,6 +14,7 @@ export default function DataView() {
 	// const [data, setData] = React.useState([]);
 
   const reducer = (d, action) => {
+    console.log("reduce");
     switch (action.type) {
       case "add":
         return [ ...d, action.data ];
@@ -21,11 +22,16 @@ export default function DataView() {
       case "clear":
         return [];
         break;
+      case "remove":
+        return [
+          ...d.slice(0, action.index),
+          ...d.slice(action.index + 1)
+        ];
+        break;
       default:
         return [ ...d, action.data ];
         break;
     }
-
   };
 
   const [data, setData] = useLocallyPersistedReducer(reducer,([]), "data" );
@@ -46,13 +52,18 @@ export default function DataView() {
 
   const [ref, dimensions] = useDimensions();
 
+  const removeCard = (i) => {
+    console.log(i);
+    setData({index: i, type: "remove"})
+  }
+
   return (
     <div ref={ref}>
       <Header loading={loading} uptime={uptime} fetch={fetch} />
 
       <Divider />
       {data.map((d,i) => {
-        return <DataCard key={"card-" + i} data={d} index={i} width={dimensions.width} />
+        return <DataCard key={i} data={d} index={i} width={dimensions.width} onRemove={removeCard} />
       })}
     </div>
   )
