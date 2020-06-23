@@ -5,8 +5,10 @@ querier.config(process.env.REACT_APP_URL, process.env.REACT_APP_TOKEN, process.e
 
 const bucket = "session01"
 
-const queryData = async (thing, start, stop, measurement, w, fn) => {
-	let q = `from(bucket: "${bucket}") |> range(start: ${start}, stop: ${stop}) |> filter(fn: (r) => r["thing"] == "${thing}") |> filter(fn: (r) => r["_measurement"] == "${measurement}")`;// |> aggregateWindow(every: ${w}, fn: ${fn})`;
+const queryData = async (thing, start, stop, measurement) => {
+  const w = "5m"
+  const fn = "max"
+	let q = `from(bucket: "${bucket}") |> range(start: ${start}, stop: ${stop}) |> filter(fn: (r) => r["thing"] == "${thing}") |> filter(fn: (r) => r["_measurement"] == "${measurement}") |> aggregateWindow(every: ${w}, fn: ${fn})`;
 	const data = await querier.query(q, {
 		rowParser(row) {
 			row._time = new Date(row._time);

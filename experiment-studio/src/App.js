@@ -26,16 +26,8 @@
 // export default App;
 
 import React from 'react';
-import { Button,
-         Card,
-         Menu,
-         Tag,
-         DatePicker,
-         Statistic,
-         Spin,
-         TimePicker,
-         Row,
-         Col } from 'antd';
+import { Menu,
+         Tag } from 'antd';
 import './App.less';
 
 
@@ -49,8 +41,6 @@ import Fetcher from './lib/Fetcher'
 import DataView from './lib/DataView'
 
 const { Sider, Content } = Layout;
-const TimeRangePicker = TimePicker.RangePicker;
-const DateRangePicker = DatePicker.RangePicker;
 
 const loadingIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
 

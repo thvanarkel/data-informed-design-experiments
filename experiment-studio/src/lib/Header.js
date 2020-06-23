@@ -80,8 +80,6 @@ export default function Header(props) {
 
   return(
     <div>
-
-
     <Row gutter={16}>
       <Col span={20}>
         <Row gutter={16}>
@@ -103,15 +101,15 @@ export default function Header(props) {
                 <TimeRangePicker format={format} order={false} onChange={(t) => setTimeRange(t)} />
               </Form.Item>
               <Form.Item>
-                <Button disabled={!validated} onClick={() => props.fetch(thing, stream, dateRange, timeRange)} loading={loading}>Fetch</Button>
+                <Button disabled={!validated} onClick={() => props.fetch(thing, stream, dateRange, timeRange)} loading={props.loading}>Fetch</Button>
               </Form.Item>
             </Form>
           </Col>
         </Row>
       </Col>
       <Col span={4}>
-        <Spin spinning={loading} indicator={loadingIcon}>
-          <Statistic title="Uptime" value={uptime != null ? uptime : "-"} suffix="%" />
+        <Spin spinning={props.loading} indicator={loadingIcon}>
+          <Statistic title="Uptime" value={props.uptime != null ? props.uptime : "-"} suffix="%" />
         </Spin>
       </Col>
     </Row>

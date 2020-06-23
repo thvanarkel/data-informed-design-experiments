@@ -1,9 +1,11 @@
 import React from 'react';
 import Header from './Header'
+import DataCard from './DataCard'
 import {
 	Divider
 } from 'antd'
 import dataProcessor from './utils/dataProcessor'
+import useDimensions from 'react-use-dimensions';
 
 export default function DataView() {
 	const [loading, setLoading] = React.useState(false);
@@ -14,7 +16,7 @@ export default function DataView() {
 	const [stream, setStream] = React.useState(null);
 
 	const processData = (d) => {
-		setData(data => [ ...data, [d] ]);
+		setData(data => [ ...data, d ]);
 	};
 
   const fetch = (thing, stream, dateRange, timeRange) => {
@@ -22,14 +24,15 @@ export default function DataView() {
     dataProcessor.fetch(thing, stream, dateRange, timeRange, processData, setLoading, setUptime)
   }
 
+  const [ref, dimensions] = useDimensions();
+
   return (
-    <div>
+    <div ref={ref}>
       <Header loading={loading} uptime={uptime} fetch={fetch} />
 
       <Divider />
-      {data.map((d) => {
-        console.log(d)
-        return <li>{d[0][0]._value}</li>
+      {data.map((d,i) => {
+        return <DataCard data={d} index={i} width={dimensions.width} />
       })}
     </div>
   )
