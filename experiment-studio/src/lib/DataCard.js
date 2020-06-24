@@ -43,8 +43,8 @@ export default function DataCard(props) {
   return(
     <Card className="data-card">
       <div className="card-header"><p>{getDate()}</p>{dropdown}</div>
-      <BlockChart data={props.data} yAxis={true} index={props.index} width={props.width} height={100} />
-      <BarChart data={props.data} yAxis={true} index={props.index} width={props.width} height={100} />
+      <BlockChart data={props.data} yAxis={true} range={props.range} index={props.index} width={props.width} height={100} />
+      <BarChart data={props.data} yAxis={true} range={props.range} index={props.index} width={props.width} height={100} />
     </Card>
   );
 }

@@ -1,9 +1,10 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import Header from './Header'
 import DataCard from './DataCard'
+import DataControls from './DataControls'
 import {
-	Divider
+	Divider,
+	InputNumber
 } from 'antd'
 import dataProcessor from './utils/dataProcessor'
 import useDimensions from 'react-use-dimensions';
@@ -36,6 +37,8 @@ export default function DataView() {
   };
 
   const [data, setData] = useLocallyPersistedReducer(reducer,([]), "data" );
+	const [range, setRange] = React.useState({min: 0, max: 0});
+	const [transformRange, setTransformRange] = React.useState();
 
 	const [thing, setThing] = React.useState(null);
 	const [stream, setStream] = React.useState(null);
@@ -58,13 +61,31 @@ export default function DataView() {
     console.log(e.item.node)
   }
 
+	let min = 10000000;
+	let max = 0;
+
+	const updateRange = (v) => {
+	  min = v < min ? v : min;
+	  max = v > max ? v : max;
+	}
+
+	React.useEffect(() => {
+		data.map((d) => d.map((e) =>{
+			updateRange(e._value)
+			setRange({min: min, max: max})
+		}))
+  }, [data]);
+
+	React.useEffect(() => {
+		console.log(`min: ${range.min} max: ${range.max}`)
+  }, [transformRange]);
+
   return (
     <div ref={ref}>
       <Header loading={loading} uptime={uptime} fetch={fetch} />
-      <Divider />
-      <Divider />
+			<DataControls range={range} updateRange={setTransformRange}/>
       {data.map((d,i) => {
-        return <DataCard key={i} data={d} index={i} width={dimensions.width} onRemove={removeCard} />
+        return <DataCard key={i} data={d} index={i} width={dimensions.width} range={transformRange} onRemove={removeCard} />
       })}
     </div>
   )

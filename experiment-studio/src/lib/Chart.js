@@ -36,7 +36,6 @@ class Chart extends Component {
   }
 
 	componentDidUpdate(prevProps) {
-
 		if (this.props.width != prevProps.width) {
 			this.width = this.props.width - this.margin.left - this.margin.right;
 			d3.select(this.svg.node().parentNode).attr("width", this.width + this.margin.left + this.margin.right);
@@ -83,8 +82,9 @@ class Chart extends Component {
 	}
 
 	updateYAxis() {
+		let max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
 		this.yScale = d3.scaleLinear()
-			.domain([0, d3.max(this.state.data, d => d._value)]) // input
+			.domain([0, max]) // input
 			.range([this.height, 0]) // output
 
 		this.yAxis = d3.axisLeft(this.yScale)
@@ -165,9 +165,11 @@ class BlockChart extends Chart {
 	}
 
 	updateYAxis() {
+		let max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
+		console.log(max);
 		this.yScale = d3.scaleLinear()
-			.domain([0, d3.max(this.state.data, d => d._value)]) // input
-			.range([10, this.height]) // output
+			.domain([0, max]) // input
+			.range([5, this.height]) // output
 
 		this.yAxis = d3.axisLeft(this.yScale)
 			.ticks(5)
@@ -187,6 +189,12 @@ class BlockChart extends Chart {
 		this.svg.selectAll('rect')
 			.attr('x', (function(d, i) {
 				return this.xScale(d._time);
+			}).bind(this))
+			.attr('y', (function(d) {
+				return  0.5 * (this.height - this.yScale(d._value));
+			}).bind(this))
+			.attr('height', (function(d) {
+				return this.yScale(d._value);
 			}).bind(this))
 
 			// .attr('fill-opacity', (function(d) {
