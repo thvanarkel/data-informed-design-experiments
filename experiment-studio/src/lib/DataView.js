@@ -4,6 +4,7 @@ import DataCard from './DataCard'
 import DataControls from './DataControls'
 import {
 	Divider,
+	Button,
 	InputNumber
 } from 'antd'
 import dataProcessor from './utils/dataProcessor'
@@ -84,6 +85,7 @@ export default function DataView() {
     <div ref={ref}>
       <Header loading={loading} uptime={uptime} fetch={fetch} />
 			<DataControls range={range} updateRange={setTransformRange}/>
+			<Button>Export</Button>
       {data.map((d,i) => {
         return <DataCard key={i} data={d} index={i} width={dimensions.width} range={transformRange} onRemove={removeCard} />
       })}

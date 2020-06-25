@@ -1,8 +1,8 @@
 import React from 'react';
-import { Card, Dropdown, Menu } from 'antd';
+import { Card, Dropdown, Menu, Spin } from 'antd';
 import { BarChart, BlockChart } from './Chart';
 import moment from 'moment';
-import { DeleteOutlined, MoreOutlined } from '@ant-design/icons';
+import { DeleteOutlined, MoreOutlined, LoadingOutlined } from '@ant-design/icons';
 
 // const closeIcon = <CloseOutlined style={{ fontSize: 12 }} />;
 
@@ -40,11 +40,16 @@ export default function DataCard(props) {
     </Dropdown>
   );
 
+  const loadIcon = <LoadingOutlined style={{ fontSize: 24 }} spin />;
+
   return(
-    <Card className="data-card">
-      <div className="card-header"><p>{getDate()}</p>{dropdown}</div>
-      <BlockChart data={props.data} yAxis={true} range={props.range} index={props.index} width={props.width} height={100} />
-      <BarChart data={props.data} yAxis={true} range={props.range} index={props.index} width={props.width} height={100} />
-    </Card>
+    <Spin indicator={loadIcon} spinning={false}>
+      <Card className="data-card">
+        <div className="card-header"><p>{getDate()}</p>{dropdown}</div>
+        { !isNaN(props.width) &&
+          <BlockChart data={props.data} yAxis={true} range={props.range} index={props.index} width={props.width} height={100} />
+        }
+      </Card>
+    </Spin>
   );
 }

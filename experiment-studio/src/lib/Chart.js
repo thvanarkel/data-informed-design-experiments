@@ -86,6 +86,7 @@ class Chart extends Component {
 		this.yScale = d3.scaleLinear()
 			.domain([0, max]) // input
 			.range([this.height, 0]) // output
+			.clamp(true)
 
 		this.yAxis = d3.axisLeft(this.yScale)
 			.ticks(5)
@@ -146,6 +147,8 @@ class BlockChart extends Chart {
 
 		this.svg.attr('class', 'block-chart')
 
+		this.colorScale = this.colorSchale();
+
 		var bars = this.svg.selectAll('rect')
 			.data(this.state.data)
 			.enter()
@@ -160,16 +163,19 @@ class BlockChart extends Chart {
 				return this.yScale(d._value);
 			}).bind(this))
 			.attr('width', 2)
+			.attr('fill-opacity', (function(d) {
+				return this.colorScale(d._value);
+			}).bind(this))
 
 		this.update();
 	}
 
 	updateYAxis() {
 		let max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
-		console.log(max);
 		this.yScale = d3.scaleLinear()
 			.domain([0, max]) // input
 			.range([5, this.height]) // output
+			.clamp(true)
 
 		this.yAxis = d3.axisLeft(this.yScale)
 			.ticks(5)
@@ -186,6 +192,8 @@ class BlockChart extends Chart {
 	update() {
 		super.update();
 
+		this.colorScale = this.colorSchale();
+
 		this.svg.selectAll('rect')
 			.attr('x', (function(d, i) {
 				return this.xScale(d._time);
@@ -196,17 +204,21 @@ class BlockChart extends Chart {
 			.attr('height', (function(d) {
 				return this.yScale(d._value);
 			}).bind(this))
+			.attr('fill-opacity', (function(d) {
+				return this.colorScale(d._value);
+			}).bind(this))
 
 			// .attr('fill-opacity', (function(d) {
 			// 	return this.colorScale(d._value);
 			// }).bind(this))
 	}
 
-	// colorSchale() {
-	// 	return d3.scaleLinear()
-	// 		.domain([d3.min(this.state.data, d => d._value), d3.max(this.state.data, d => d._value)])
-	// 		.range([0.0, 1.0]);
-	// }
+	colorSchale() {
+		let max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
+		return d3.scaleLinear()
+			.domain([d3.min(this.state.data, d => d._value), max])
+			.range([0.2, 1.0]);
+	}
 
 }
 
