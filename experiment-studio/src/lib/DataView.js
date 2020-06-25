@@ -4,7 +4,6 @@ import DataCard from './DataCard'
 import DataControls from './DataControls'
 import {
 	Divider,
-	Button,
 	InputNumber
 } from 'antd'
 import dataProcessor from './utils/dataProcessor'
@@ -55,7 +54,13 @@ export default function DataView() {
     dataProcessor.fetch(thing, stream, dateRange, timeRange, processData, setLoading, setUptime)
   }
 
+	const clear = () => {
+		setData({type: "clear"});
+	}
+
   const [ref, dimensions] = useDimensions();
+
+	const pageRef = React.createRef()
 
   const removeCard = (i, e) => {
     setData({index: i, type: "remove"})
@@ -84,11 +89,13 @@ export default function DataView() {
   return (
     <div ref={ref}>
       <Header loading={loading} uptime={uptime} fetch={fetch} />
-			<DataControls range={range} updateRange={setTransformRange}/>
-			<Button>Export</Button>
+			<DataControls range={range} updateRange={setTransformRange} clear={clear}/>
       {data.map((d,i) => {
-        return <DataCard key={i} data={d} index={i} width={dimensions.width} range={transformRange} onRemove={removeCard} />
+        return (
+					<DataCard key={i} data={d} index={i} width={dimensions.width} range={transformRange} onRemove={removeCard} />
+				)
       })}
+
     </div>
   )
 }

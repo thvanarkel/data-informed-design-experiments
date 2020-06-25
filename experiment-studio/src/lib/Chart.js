@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import * as d3 from 'd3';
 
+const { dialog } = require('electron').remote
+var fs = require("fs");
+
 class Chart extends Component {
 	constructor(props) {
 		super(props);
@@ -100,6 +103,19 @@ class Chart extends Component {
 			<div className="graph" id={"graph-" + this.props.index}></div>
 		)
   }
+
+	export() {
+		console.log("export!")
+    var svgString = getSVGString(this.svg.node().parentNode);
+    var path = dialog.showOpenDialogSync({ properties: ['openDirectory'] })
+    path += "/chart" + ".svg"
+    fs.writeFile(path, svgString, (err) => {
+      // throws an error, you could also catch it here
+    if (err) throw err;
+      // success case, the file was saved
+      console.log('Saved visual!');
+    });
+  }
 }
 
 class BarChart extends Chart {
@@ -147,20 +163,22 @@ class BlockChart extends Chart {
 
 		this.svg.attr('class', 'block-chart')
 
+		console.log(this.props.gradient)
 		this.colorScale = this.colorSchale();
 
 		var bars = this.svg.selectAll('rect')
 			.data(this.state.data)
 			.enter()
 			.append('rect')
-			.attr('x', (function(d, i) {
+
+		bars.attr('x', (function(d, i) {
 				return this.xScale(d._time);
 			}).bind(this))
 			.attr('y', (function(d) {
-				return  0.5 * (this.height - this.yScale(d._value));
+				return this.props.fixedHeight ? 0 : 0.5 * (this.height - this.yScale(d._value));
 			}).bind(this))
 			.attr('height', (function(d) {
-				return this.yScale(d._value);
+				return this.props.fixedHeight ? this.height : this.yScale(d._value);
 			}).bind(this))
 			.attr('width', 2)
 			.attr('fill-opacity', (function(d) {
@@ -199,10 +217,10 @@ class BlockChart extends Chart {
 				return this.xScale(d._time);
 			}).bind(this))
 			.attr('y', (function(d) {
-				return  0.5 * (this.height - this.yScale(d._value));
+				return this.props.fixedHeight ? 0 : 0.5 * (this.height - this.yScale(d._value));
 			}).bind(this))
 			.attr('height', (function(d) {
-				return this.yScale(d._value);
+				return this.props.fixedHeight ? this.height : this.yScale(d._value);
 			}).bind(this))
 			.attr('fill-opacity', (function(d) {
 				return this.colorScale(d._value);
@@ -215,11 +233,91 @@ class BlockChart extends Chart {
 
 	colorSchale() {
 		let max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
+		let range = this.props.gradient !== undefined ? this.props.gradient : {min: 1.0, max: 1.0};
 		return d3.scaleLinear()
 			.domain([d3.min(this.state.data, d => d._value), max])
-			.range([0.2, 1.0]);
+			.range([range.min, range.max]);
 	}
 
 }
 
 export { BarChart, BlockChart };
+
+
+
+
+
+// Below are the functions that handle actual exporting:
+// getSVGString ( svgNode ) and svgString2Image( svgString, width, height, format, callback )
+function getSVGString( svgNode ) {
+	svgNode.setAttribute('xlink', 'http://www.w3.org/1999/xlink');
+	var cssStyleText = getCSSStyles( svgNode );
+	appendCSS( cssStyleText, svgNode );
+
+	var serializer = new XMLSerializer();
+	var svgString = serializer.serializeToString(svgNode);
+	svgString = svgString.replace(/(\w+)?:?xlink=/g, 'xmlns:xlink='); // Fix root xlink without namespace
+	svgString = svgString.replace(/NS\d+:href/g, 'xlink:href'); // Safari NS namespace fix
+
+	console.log(svgString);
+
+	return svgString;
+
+	function getCSSStyles( parentElement ) {
+		var selectorTextArr = [];
+
+		// Add Parent element Id and Classes to the list
+		selectorTextArr.push( '#'+parentElement.id );
+		for (var c = 0; c < parentElement.classList.length; c++)
+				if ( !contains('.'+parentElement.classList[c], selectorTextArr) )
+					selectorTextArr.push( '.'+parentElement.classList[c] );
+
+		// Add Children element Ids and Classes to the list
+		var nodes = parentElement.getElementsByTagName("*");
+		for (var i = 0; i < nodes.length; i++) {
+			var id = nodes[i].id;
+			if ( !contains('#'+id, selectorTextArr) )
+				selectorTextArr.push( '#'+id );
+
+			var classes = nodes[i].classList;
+			for (var c = 0; c < classes.length; c++)
+				if ( !contains('.'+classes[c], selectorTextArr) )
+					selectorTextArr.push( '.'+classes[c] );
+		}
+
+		// Extract CSS Rules
+		var extractedCSSText = "";
+		for (var i = 0; i < document.styleSheets.length; i++) {
+			var s = document.styleSheets[i];
+
+			try {
+			    if(!s.cssRules) continue;
+			} catch( e ) {
+		    		if(e.name !== 'SecurityError') throw e; // for Firefox
+		    		continue;
+		    	}
+
+			var cssRules = s.cssRules;
+			for (var r = 0; r < cssRules.length; r++) {
+				if ( contains( cssRules[r].selectorText, selectorTextArr ) )
+					extractedCSSText += cssRules[r].cssText;
+			}
+		}
+
+
+		return extractedCSSText;
+
+		function contains(str,arr) {
+			return arr.indexOf( str ) === -1 ? false : true;
+		}
+
+	}
+
+	function appendCSS( cssText, element ) {
+		var styleElement = document.createElement("style");
+		styleElement.setAttribute("type","text/css");
+		styleElement.innerHTML = cssText;
+		var refNode = element.hasChildNodes() ? element.children[0] : null;
+		element.insertBefore( styleElement, refNode );
+	}
+}

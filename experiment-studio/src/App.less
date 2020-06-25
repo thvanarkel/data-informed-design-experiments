@@ -22,7 +22,7 @@
 @red-light:       #FCEEEF;
 @magenta:         #DD0C75;
 @magenta-light:   #FBE8F1;
-@peach:           #FF65FF;
+@peach:           #FF6577;
 @peach-light:     #FFF0F2;
 @mauve:           #B56EF5;
 @mauve-light:     #F3E6FD;
@@ -83,6 +83,14 @@
   margin-top: 25px;
 }
 
+.data-controls-menu {
+  display: flex;
+  justify-content: space-between;
+  .data-controls-buttons *:not(:last-child) {
+    margin-right: 10px;
+  }
+}
+
 .data-card {
   margin-bottom: 10px;
   border-radius: 5px;
@@ -131,8 +139,6 @@
   &.mauve {
     .color-scheme(@mauve, @mauve-light);
   }
-
-
 }
 
 .color-scheme(@color, @color-light) {
