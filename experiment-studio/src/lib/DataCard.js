@@ -12,6 +12,7 @@ export default function DataCard(props) {
 
   React.useEffect(() => {
     var measurement = props.data[0]._measurement;
+    console.log(props.data)
     console.log(measurement);
     switch(measurement) {
       case "light-a":
@@ -25,7 +26,7 @@ export default function DataCard(props) {
       case "sound":
         setConfig({
           color: "mauve",
-          yAxis: false,
+          yAxis: true,
           gradient: {min: 0.6, max: 1.0},
           fixedHeight: false
         })
@@ -33,7 +34,7 @@ export default function DataCard(props) {
       case "motion":
         setConfig({
           color: "peach",
-          yAxis: false,
+          yAxis: true,
           gradient: {min: 0.6, max: 1.0},
           // fixedHeight: false
         })
@@ -52,6 +53,12 @@ export default function DataCard(props) {
   const getDate = () => {
     const d = moment(props.data[0]._start).format("ddd DD.MM.YYYY");
     return d;
+  }
+
+  const getWindow = () => {
+    const w = props.data[0].window;
+    const fn = props.data[0].fn;
+    return w.length > 0 ? ` ${props.data[0].window}(${props.data[0].fn})` : "";
   }
 
   const menu = (
@@ -84,9 +91,9 @@ export default function DataCard(props) {
   return(
     <Spin indicator={loadIcon} spinning={false}>
       <Card className={"data-card " + (config.color !== undefined ? config.color : "")}>
-        <div className="card-header"><p>{getDate()}</p>{dropdown}</div>
+        <div className="card-header"><p>{getDate() + getWindow()}</p>{dropdown}</div>
         { !isNaN(props.width) &&
-          <BlockChart ref={chartRef}
+          <BarChart ref={chartRef}
                       data={props.data}
                       yAxis={config.yAxis}
                       range={props.range}

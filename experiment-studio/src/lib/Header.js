@@ -6,6 +6,7 @@ import { Button,
          DatePicker,
          Divider,
          Form,
+         Input,
          Menu,
          Statistic,
          Spin,
@@ -43,6 +44,8 @@ export default function Header(props) {
 
   const [thing, setThing] = useStateWithLocalStorage('thing');
   const [stream, setStream] = useStateWithLocalStorage('stream');
+  const [window, setWindow] = React.useState('');
+  const [fn, setFn] = React.useState('');
 
   const [uptime, setUptime] = React.useState(null);
 
@@ -101,7 +104,13 @@ export default function Header(props) {
                 <TimeRangePicker format={format} order={false} onChange={(t) => setTimeRange(t)} />
               </Form.Item>
               <Form.Item>
-                <Button disabled={!validated} onClick={() => props.fetch(thing, stream, dateRange, timeRange)} loading={props.loading}>Fetch</Button>
+              <Input.Group compact>
+                <Input style={{ width: '25%' }} placeholder="window" onChange={(v) => setWindow(v.target.value)} />
+                <Input style={{ width: '30%' }} placeholder="function" onChange={(v) => setFn(v.target.value)} />
+              </Input.Group>
+              </Form.Item>
+              <Form.Item>
+                <Button disabled={!validated} onClick={() => props.fetch(thing, stream, window, fn, dateRange, timeRange)} loading={props.loading}>Fetch</Button>
               </Form.Item>
             </Form>
           </Col>

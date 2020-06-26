@@ -133,15 +133,17 @@ class BarChart extends Chart {
 				return this.yScale(0);
 			}).bind(this))
 			.y1((function(d) {
-				return this.yScale(d._value);
+				return this.yScale(d._value)
+				// return d._value < 0.02 ? this.yScale(0) : this.yScale(1);
 			}).bind(this)) // set the y values for the line generator
-			.curve(d3.curveBasis) // apply smoothing to the line
-
+			//.curve(d3.curveBasis) // apply smoothing to the line
+			.curve(d3.curveStepAfter)
 		// Name the SVG
 		this.svg.attr('class', 'line-chart')
 
 		this.svg.append("path")
 			.attr("class", "line")
+		this.update();
 	}
 
 	update() {

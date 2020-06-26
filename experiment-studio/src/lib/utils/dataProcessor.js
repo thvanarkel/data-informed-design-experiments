@@ -5,10 +5,15 @@ querier.config(process.env.REACT_APP_URL, process.env.REACT_APP_TOKEN, process.e
 
 const bucket = "session01"
 
-const queryData = async (thing, start, stop, measurement) => {
-  const w = "5m"
-  const fn = "max"
-	let q = `from(bucket: "${bucket}") |> range(start: ${start}, stop: ${stop}) |> filter(fn: (r) => r["thing"] == "${thing}") |> filter(fn: (r) => r["_measurement"] == "${measurement}") |> aggregateWindow(every: ${w}, fn: ${fn})`;
+const queryData = async (thing, start, stop, measurement, window, fn) => {
+  let q = `from(bucket: "${bucket}") |> range(start: ${start}, stop: ${stop}) |> filter(fn: (r) => r["thing"] == "${thing}") |> filter(fn: (r) => r["_measurement"] == "${measurement}")`;
+  console.log(window);
+  console.log(`window: ${window} fn: ${fn}`)
+  if (window.length > 0 && fn.length > 0) {
+    q +=  `|> aggregateWindow(every: ${window}, fn: ${fn})`;
+
+  }
+  console.log(q);
 	const data = await querier.query(q, {
 		rowParser(row) {
 			row._time = new Date(row._time);
@@ -21,8 +26,11 @@ const queryData = async (thing, start, stop, measurement) => {
 let loading;
 let uptime;
 
+let window;
+let fn;
+
 export default {
-  fetch: async (thing, stream, dateRange, timeRange, processData, setLoading, setUptime) => {
+  fetch: async (thing, stream, window, fn, dateRange, timeRange, processData, setLoading, setUptime) => {
     setLoading(true);
     loading = false;
 
@@ -47,7 +55,7 @@ export default {
 
     while (dStart.isBefore(endRange)) {
       console.log(`${dStart}, ${dEnd}`)
-      const data = await queryData(thing, dStart.format(), dEnd.format(), stream, "1s", "max");
+      const data = await queryData(thing, dStart.format(), dEnd.format(), stream, window, fn);
 
       let t = 0;
       let o = 0;
@@ -70,6 +78,9 @@ export default {
       console.log(off);
       dStart.add(24, 'hours')
       dEnd.add(24, 'hours')
+
+      data[0].window = window;
+      data[0].fn = fn;
       processData(data);
     }
     setLoading(false);

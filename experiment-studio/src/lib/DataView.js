@@ -48,10 +48,10 @@ export default function DataView() {
     setData({data: d, type: "add"})
 	};
 
-  const fetch = (thing, stream, dateRange, timeRange) => {
+  const fetch = (thing, stream, window, fn, dateRange, timeRange) => {
     console.log("fetch")
     // setData({type: "clear"})
-    dataProcessor.fetch(thing, stream, dateRange, timeRange, processData, setLoading, setUptime)
+    dataProcessor.fetch(thing, stream, window, fn, dateRange, timeRange, processData, setLoading, setUptime)
   }
 
 	const clear = () => {
