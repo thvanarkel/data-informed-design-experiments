@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import * as d3 from 'd3';
+import moment from 'moment'
 
 const { dialog } = require('electron').remote
 var fs = require("fs");
@@ -13,7 +14,7 @@ class Chart extends Component {
 		this.margin = {
 			top: 10,
 			right: 10,
-			bottom: 20,
+			bottom: 30,
 			left: 30
 		};
 		this.hasYAxis = props.yAxis !== undefined ? props.yAxis : false;
@@ -61,6 +62,14 @@ class Chart extends Component {
 				.attr("class", "y axis")
 		}
 
+		d3.select(this.svg.node().parentNode).append('line')
+			.attr('x1', 0)
+			.attr('x2', this.props.width)
+			.attr('y1', this.props.height)
+			.attr('y2', this.props.height)
+			.attr('stroke-width', 3)
+			.attr('stroke', "#000000")
+
 		this.updateXAxis();
 		this.updateYAxis();
 		this.initialised = true;
@@ -85,9 +94,9 @@ class Chart extends Component {
 	}
 
 	updateYAxis() {
-		let max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
+		this.max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
 		this.yScale = d3.scaleLinear()
-			.domain([0, max]) // input
+			.domain([0, this.max]) // input
 			.range([this.height, 0]) // output
 			.clamp(true)
 
@@ -108,7 +117,11 @@ class Chart extends Component {
 		console.log("export!")
     var svgString = getSVGString(this.svg.node().parentNode);
     var path = dialog.showOpenDialogSync({ properties: ['openDirectory'] })
-    path += "/chart" + ".svg"
+
+		var d = moment(this.props.data[0]._start).format("YYYYMMDD")
+		path += `/P1_${d}_${this.props.thing}_${this.props.measurement}_${this.props.window}` + ".svg";
+
+    // path += "/sensor-line" + ".svg"
     fs.writeFile(path, svgString, (err) => {
       // throws an error, you could also catch it here
     if (err) throw err;
@@ -118,26 +131,27 @@ class Chart extends Component {
   }
 }
 
-class BarChart extends Chart {
+class LineChart extends Chart {
 	constructor(props) {
 		super(props)
 	}
 
   drawChart() {
 		super.drawChart();
-		this.line = d3.area()
+		this.line = d3.line()
 			.x((function(d, i) {
 				return this.xScale(d._time);
 			}).bind(this)) // set the x values for the line generator
-			.y0((function(d) {
-				return this.yScale(0);
-			}).bind(this))
-			.y1((function(d) {
+			// .y0((function(d) {
+			// 	return this.yScale(0);
+			// }).bind(this))
+			.y((function(d) {
+				if (this.props.discrete) return (d._value < (0.25 * this.max) || d._value < 0.01) ? this.yScale(0) : this.yScale(1);
 				return this.yScale(d._value)
-				// return d._value < 0.02 ? this.yScale(0) : this.yScale(1);
 			}).bind(this)) // set the y values for the line generator
 			//.curve(d3.curveBasis) // apply smoothing to the line
-			.curve(d3.curveStepAfter)
+			.curve(d3.curveLinear)
+
 		// Name the SVG
 		this.svg.attr('class', 'line-chart')
 
@@ -151,7 +165,9 @@ class BarChart extends Chart {
 		this.svg.selectAll(".line")
 			.datum(this.state.data) // 10. Binds data to the line
 			.attr("class", "line") // Assign a class for styling
-			.attr("d", this.line); // 11. Calls the line generator
+			.attr("d", this.line) // 11. Calls the line generator
+			.attr('fill-opacity', '0')
+			.attr('stroke-width', 2)
 		}
 }
 
@@ -177,12 +193,23 @@ class BlockChart extends Chart {
 				return this.xScale(d._time);
 			}).bind(this))
 			.attr('y', (function(d) {
-				return this.props.fixedHeight ? 0 : 0.5 * (this.height - this.yScale(d._value));
+				var v = d._value
+				if (this.props.discrete) {
+					v = (v < (0.25 * this.max) || d._value < 0.01) ? this.yScale(0) : this.yScale(1);
+				}
+				return this.props.fixedHeight ? 0 : 0.5 * (this.height - this.yScale(v));
 			}).bind(this))
 			.attr('height', (function(d) {
-				return this.props.fixedHeight ? this.height : this.yScale(d._value);
+				var v = d._value
+				if (this.props.discrete) {
+					v = (v < (0.25 * this.max) || d._value < 0.01) ? this.yScale(0) : this.yScale(1);
+					// console.log(v)
+				} else {
+					v = this.yScale(v);
+				}
+				return this.props.fixedHeight ? this.height : v;
 			}).bind(this))
-			.attr('width', 2)
+			.attr('width', 1)
 			.attr('fill-opacity', (function(d) {
 				return this.colorScale(d._value);
 			}).bind(this))
@@ -191,9 +218,9 @@ class BlockChart extends Chart {
 	}
 
 	updateYAxis() {
-		let max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
+		this.max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
 		this.yScale = d3.scaleLinear()
-			.domain([0, max]) // input
+			.domain([0, this.max]) // input
 			.range([5, this.height]) // output
 			.clamp(true)
 
@@ -214,15 +241,26 @@ class BlockChart extends Chart {
 
 		this.colorScale = this.colorSchale();
 
+
 		this.svg.selectAll('rect')
 			.attr('x', (function(d, i) {
 				return this.xScale(d._time);
 			}).bind(this))
 			.attr('y', (function(d) {
-				return this.props.fixedHeight ? 0 : 0.5 * (this.height - this.yScale(d._value));
+				var v = d._value
+				if (this.props.discrete) {
+					v = (v < (0.25 * this.max) || d._value < 0.01) ? this.yScale(0) : this.yScale(1);
+				}
+				return this.props.fixedHeight ? 0 : 0.5 * (this.height - this.yScale(v));
 			}).bind(this))
 			.attr('height', (function(d) {
-				return this.props.fixedHeight ? this.height : this.yScale(d._value);
+				var v = d._value
+				if (this.props.discrete) {
+					v = (v < (0.25 * this.max) || d._value < 0.01) ? this.yScale(0) : this.yScale(1);
+				} else {
+					v = this.yScale(v);
+				}
+				return this.props.fixedHeight ? this.height : v;
 			}).bind(this))
 			.attr('fill-opacity', (function(d) {
 				return this.colorScale(d._value);
@@ -243,7 +281,7 @@ class BlockChart extends Chart {
 
 }
 
-export { BarChart, BlockChart };
+export { LineChart, BlockChart };
 
 
 

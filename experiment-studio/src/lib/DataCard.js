@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Dropdown, Menu, Spin } from 'antd';
-import { BarChart, BlockChart } from './Chart';
+import { LineChart, BlockChart } from './Chart';
 import moment from 'moment';
 import { DeleteOutlined, MoreOutlined, LoadingOutlined } from '@ant-design/icons';
 
@@ -9,34 +9,41 @@ import { DeleteOutlined, MoreOutlined, LoadingOutlined } from '@ant-design/icons
 export default function DataCard(props) {
 
   const [config, setConfig] = React.useState({});
+  const [measurement, setMeasurement] = React.useState();
+  const [thing, setThing] = React.useState();
 
   React.useEffect(() => {
-    var measurement = props.data[0]._measurement;
-    console.log(props.data)
-    console.log(measurement);
-    switch(measurement) {
+    var t = props.data[0].thing;
+    setThing(t);
+    var m = props.data[0]._measurement;
+    setMeasurement(m);
+    console.log(props.data);
+    switch(m) {
       case "light-a":
         setConfig({
           color: "yellow",
           yAxis: false,
           gradient: {min: 0.1, max: 1.0},
-          fixedHeight: true
+          fixedHeight: true,
+          discrete: false
         })
         break;
       case "sound":
         setConfig({
-          color: "mauve",
-          yAxis: true,
-          gradient: {min: 0.6, max: 1.0},
-          fixedHeight: false
+          color: "",
+          yAxis: false,
+          gradient: {min: 0.8, max: 1.0},
+          fixedHeight: false,
+          discrete: false
         })
         break;
       case "motion":
         setConfig({
           color: "peach",
           yAxis: true,
-          gradient: {min: 0.6, max: 1.0},
-          // fixedHeight: false
+          gradient: {min: 1.0, max: 1.0},
+          fixedHeight: false,
+          discrete: true
         })
         break;
       default:
@@ -44,7 +51,8 @@ export default function DataCard(props) {
           color: "",
           yAxis: false,
           gradient: {min: 1.0, max: 1.0},
-          fixedHeight: false
+          fixedHeight: false,
+          discrete: false
         })
         break;
     }
@@ -93,12 +101,16 @@ export default function DataCard(props) {
       <Card className={"data-card " + (config.color !== undefined ? config.color : "")}>
         <div className="card-header"><p>{getDate() + getWindow()}</p>{dropdown}</div>
         { !isNaN(props.width) &&
-          <BarChart ref={chartRef}
+          <BlockChart ref={chartRef}
                       data={props.data}
+                      window={getWindow()}
+                      measurement={measurement}
+                      thing={thing}
                       yAxis={config.yAxis}
                       range={props.range}
                       index={props.index}
                       width={props.width}
+                      discrete={config.discrete}
                       height={100}
                       gradient={config.gradient}
                       fixedHeight={config.fixedHeight}
