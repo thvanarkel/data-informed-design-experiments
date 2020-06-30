@@ -10,7 +10,7 @@ import dataProcessor from './utils/dataProcessor'
 import useDimensions from 'react-use-dimensions';
 import { useLocallyPersistedReducer } from './utils/persistenceHelpers'
 
-export default function DataView() {
+export default function DataView(props) {
 	const [loading, setLoading] = React.useState(false);
 	const [uptime, setUptime] = React.useState();
 	// const [data, setData] = React.useState([]);
@@ -51,7 +51,7 @@ export default function DataView() {
   const fetch = (thing, stream, window, fn, dateRange, timeRange) => {
     console.log("fetch")
     // setData({type: "clear"})
-    dataProcessor.fetch(thing, stream, window, fn, dateRange, timeRange, processData, setLoading, setUptime)
+    dataProcessor.fetch(props.session, thing, stream, window, fn, dateRange, timeRange, processData, setLoading, setUptime)
   }
 
 	const clear = () => {
@@ -88,7 +88,7 @@ export default function DataView() {
 
   return (
     <div ref={ref}>
-      <Header loading={loading} uptime={uptime} fetch={fetch} />
+      <Header loading={loading} uptime={uptime} fetch={fetch} session={props.session} />
 			<DataControls range={range} updateRange={setTransformRange} clear={clear}/>
       {data.map((d,i) => {
         return (

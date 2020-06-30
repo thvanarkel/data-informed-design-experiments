@@ -12,8 +12,8 @@ class Chart extends Component {
 			data: this.parseData(props.data),
 		}
 		this.margin = {
-			top: 10,
-			right: 10,
+			top: 20,
+			right: 15,
 			bottom: 30,
 			left: 30
 		};
@@ -56,19 +56,40 @@ class Chart extends Component {
 		this.svg.append("g")
 			.attr("class", "x axis")
 			.attr("transform", "translate(0," + this.height + ")")
+			.attr("opacity", "0.3")
 
 		if (this.hasYAxis) {
 			this.svg.append("g")
 				.attr("class", "y axis")
 		}
 
-		d3.select(this.svg.node().parentNode).append('line')
-			.attr('x1', 0)
-			.attr('x2', this.props.width)
-			.attr('y1', this.props.height)
-			.attr('y2', this.props.height)
-			.attr('stroke-width', 3)
-			.attr('stroke', "#000000")
+		// d3.select(this.svg.node().parentNode).append('text')
+		// 	.attr('x', this.margin.left)
+		// 	.attr('y', 10)
+		// 	.text("title")
+		// 	.attr('font-weight', 500)
+		// 	.attr('fill', "#000000")
+		// .append('text')
+		// 	.attr('x', 20)
+		// 	.attr('y', 10)
+		// 	.text("other")
+		// 	.attr('font-weight', 500)
+		// 	.attr('fill', "#000000")
+
+		var title = d3.select(this.svg.node().parentNode).append('text')
+		  .attr("x", this.margin.left)
+		  .attr("y", 10)
+			// .attr("font-family", "Lars")
+		  // .style("text-anchor", function(d) { return d.root ? "start" : "end"; });
+		 title.append("tspan")
+		 .style("font-weight", 600)
+		 .text(this.props.measurement);
+
+		 title.append("tspan")
+			.style("font-weight", 300)
+			.style("font-style", "normal")
+			.attr("font-family", "Lars")
+			.text(this.props.window);
 
 		this.updateXAxis();
 		this.updateYAxis();
@@ -81,8 +102,11 @@ class Chart extends Component {
 	}
 
 	updateXAxis() {
+		const start = new Date(this.state.data[0]._start);
+		const stop = new Date(this.state.data[0]._stop)
 		this.xScale = d3.scaleTime()
-			.domain([d3.min(this.state.data, d => d._time), d3.max(this.state.data, d => d._time)]) // input
+			.domain([start, stop]) // input
+			// .domain([d3.min(this.state.data, d => d._time), d3.max(this.state.data, d => d._time)]) // input
 			.range([0, this.width]) // output
 
 		this.xAxis = d3.axisBottom(this.xScale)
@@ -119,7 +143,7 @@ class Chart extends Component {
     var path = dialog.showOpenDialogSync({ properties: ['openDirectory'] })
 
 		var d = moment(this.props.data[0]._start).format("YYYYMMDD")
-		path += `/P1_${d}_${this.props.thing}_${this.props.measurement}_${this.props.window}` + ".svg";
+		path += `/P${this.props.data[0].session}_${d}_${this.props.thing}_${this.props.measurement}_${this.props.window}` + ".svg";
 
     // path += "/sensor-line" + ".svg"
     fs.writeFile(path, svgString, (err) => {
@@ -167,7 +191,8 @@ class LineChart extends Chart {
 			.attr("class", "line") // Assign a class for styling
 			.attr("d", this.line) // 11. Calls the line generator
 			.attr('fill-opacity', '0')
-			.attr('stroke-width', 2)
+			.attr('stroke-width', 1)
+			.attr('stroke', "black")
 		}
 }
 
@@ -251,7 +276,13 @@ class BlockChart extends Chart {
 				if (this.props.discrete) {
 					v = (v < (0.25 * this.max) || d._value < 0.01) ? this.yScale(0) : this.yScale(1);
 				}
-				return this.props.fixedHeight ? 0 : 0.5 * (this.height - this.yScale(v));
+				if (this.props.fixedHeight) {
+					return 0;
+				}
+				if (this.props.discrete) {
+					return v < 10 ? this.height - v : 0.5 * (this.height - this.yScale(v));
+				}
+				return 0.5 * (this.height - this.yScale(v));
 			}).bind(this))
 			.attr('height', (function(d) {
 				var v = d._value
@@ -281,7 +312,83 @@ class BlockChart extends Chart {
 
 }
 
-export { LineChart, BlockChart };
+class AccelChart extends Chart {
+	constructor(props) {
+		super(props)
+	}
+
+  drawChart() {
+		super.drawChart();
+		let min = d3.min(this.state.data, d => d._value);
+		let max = d3.max(this.state.data, d => d._value);
+		// console.log(`min: ${min}, max ${max}, ${0.5 * (min - max)}`)
+		this.line = d3.line()
+			.x((function(d, i) {
+				return this.xScale(d._time);
+			}).bind(this)) // set the x values for the line generator
+			// .y0((function(d) {
+			// 	return this.yScale(0);
+			// }).bind(this))
+			.y((function(d) {
+				// if (this.props.discrete) return (d._value < (0.25 * this.max) || d._value < 0.01) ? this.yScale(0) : this.yScale(1);
+				// return this.yScale(d._value)
+				// console.log(`${d._value} ${0.5 * (min - max)} ${d._value - (0.5 * (min - max))}`)
+				return this.yScale((0.5 * (min - max)) - d._value)
+			}).bind(this)) // set the y values for the line generator
+			//.curve(d3.curveBasis) // apply smoothing to the line
+			.curve(d3.curveLinear)
+
+		// Name the SVG
+		this.svg.attr('class', 'line-chart')
+
+		// this.svg.append("path")
+		// 	.attr("class", "line")
+		const xData = this.state.data.filter(d => d._field === "x");
+		const yData = this.state.data.filter(d => d._field === "y");
+		const zData = this.state.data.filter(d => d._field === "z");
+		// console.log(xData)
+		// console.log(yData)
+		// console.log(zData)
+		var data = [yData,xData,zData];
+
+		var lines = this.svg.selectAll(".line-chart")
+			.data(data) // 10. Binds data to the line
+			.enter()
+			.append('path')
+			.attr("class", "line")
+
+		lines.attr("d", this.line) // 11. Calls the line generator
+			.attr('stroke-width', 1)
+			.attr("stroke", "black")
+			.attr("fill-opacity", 0)
+			.attr("opacity", 0.2);
+
+		// this.update();
+	}
+
+	updateYAxis() {
+		this.max = this.props.range !== undefined ? this.props.range.max : d3.max(this.state.data, d => d._value)
+		this.yScale = d3.scaleLinear()
+			.domain([this.max, d3.min(this.state.data, d => d._value)]) // input
+			// .domain([1, -1]) // input
+			.range([5, this.height]) // output
+			.clamp(true)
+
+		this.yAxis = d3.axisLeft(this.yScale)
+			.ticks(5)
+
+		this.svg.select('.y.axis')
+			.call(this.yAxis)
+	}
+
+	update() {
+		// super.update();
+		// console.log("update")
+	}
+
+}
+
+export { LineChart, BlockChart, AccelChart };
 
 
 

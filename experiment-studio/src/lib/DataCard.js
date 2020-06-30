@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Dropdown, Menu, Spin } from 'antd';
-import { LineChart, BlockChart } from './Chart';
+import { AccelChart, LineChart, BlockChart } from './Chart';
 import moment from 'moment';
 import { DeleteOutlined, MoreOutlined, LoadingOutlined } from '@ant-design/icons';
 
@@ -21,7 +21,18 @@ export default function DataCard(props) {
     switch(m) {
       case "light-a":
         setConfig({
-          color: "yellow",
+          color: "",
+          height: 50,
+          yAxis: false,
+          gradient: {min: 0.1, max: 1.0},
+          fixedHeight: true,
+          discrete: false
+        })
+        break;
+      case "light":
+        setConfig({
+          color: "",
+          height: 50,
           yAxis: false,
           gradient: {min: 0.1, max: 1.0},
           fixedHeight: true,
@@ -31,24 +42,57 @@ export default function DataCard(props) {
       case "sound":
         setConfig({
           color: "",
+          height: 100,
           yAxis: false,
-          gradient: {min: 0.8, max: 1.0},
+          gradient: {min: 0.6, max: 1.0},
           fixedHeight: false,
           discrete: false
         })
         break;
       case "motion":
         setConfig({
-          color: "peach",
-          yAxis: true,
+          color: "",
+          height: 75,
+          yAxis: false,
           gradient: {min: 1.0, max: 1.0},
           fixedHeight: false,
           discrete: true
         })
         break;
+      case "temperature":
+        setConfig({
+          color: "",
+          height: 150,
+          yAxis: true,
+          gradient: {min: 1.0, max: 1.0},
+          fixedHeight: false,
+          discrete: false
+        })
+        break;
+      case "acceleration":
+        setConfig({
+          color: "",
+          height: 75,
+          yAxis: false,
+          gradient: {min: 1.0, max: 1.0},
+          fixedHeight: false,
+          discrete: false
+        })
+        break;
+      case "distance":
+        setConfig({
+          color: "",
+          height: 100,
+          yAxis: false,
+          gradient: {min: 1.0, max: 1.0},
+          fixedHeight: false,
+          discrete: false
+        })
+        break;
       default:
         setConfig({
           color: "",
+          height: 100,
           yAxis: false,
           gradient: {min: 1.0, max: 1.0},
           fixedHeight: false,
@@ -57,6 +101,7 @@ export default function DataCard(props) {
         break;
     }
   }, [props.data]);
+
 
   const getDate = () => {
     const d = moment(props.data[0]._start).format("ddd DD.MM.YYYY");
@@ -67,6 +112,10 @@ export default function DataCard(props) {
     const w = props.data[0].window;
     const fn = props.data[0].fn;
     return w.length > 0 ? ` ${props.data[0].window}(${props.data[0].fn})` : "";
+  }
+
+  const exportCard = () => {
+    chartRef.current.export();
   }
 
   const menu = (
@@ -81,7 +130,7 @@ export default function DataCard(props) {
           2nd menu item
         </a>
       </Menu.Item>
-      <Menu.Item onClick={() => chartRef.current.export()}>Export</Menu.Item>
+      <Menu.Item onClick={exportCard}>Export</Menu.Item>
       <Menu.Item danger onClick={(e) => props.onRemove(props.index, e)}><DeleteOutlined />Remove card</Menu.Item>
     </Menu>
   );
@@ -111,7 +160,7 @@ export default function DataCard(props) {
                       index={props.index}
                       width={props.width}
                       discrete={config.discrete}
-                      height={100}
+                      height={config.height !== undefined ? config.height : 75}
                       gradient={config.gradient}
                       fixedHeight={config.fixedHeight}
                    />

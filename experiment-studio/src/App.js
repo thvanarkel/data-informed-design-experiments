@@ -29,6 +29,7 @@ import React from 'react';
 import { Menu,
          Tag } from 'antd';
 import './App.less';
+import { useStateWithLocalStorage } from './lib/utils/persistenceHelpers'
 
 
 
@@ -49,33 +50,23 @@ const format = 'HH:mm';
 
 
 const bucket = "session01"
-querier.config(process.env.REACT_APP_URL, process.env.REACT_APP_TOKEN, process.env.REACT_APP_ORG);
-
-const queryData = (thing, start, stop, measurement, w, fn) => async () => {
-	let q = `from(bucket: "${bucket}") |> range(start: ${start}, stop: ${stop}) |> filter(fn: (r) => r["thing"] == "${thing}") |> filter(fn: (r) => r["_measurement"] == "${measurement}")`;// |> aggregateWindow(every: ${w}, fn: ${fn})`;
-	const data = await querier.query(q, {
-		rowParser(row) {
-			row._time = new Date(row._time);
-			return row;
-		}
-	});
-	return data;
-}
 
 export default function App() {
+  const [session, setSession] = useStateWithLocalStorage('session');
+
   return (
     <div className="App">
     <Layout>
       <Sider className="sider" width="300" theme="light">Experiment
       <Menu className="menu" defaultSelectedKeys={['1']} mode="inline">
-        <Menu.Item key="1">Participant 1 <Tag color="success">completed</Tag></Menu.Item>
-        <Menu.Item key="2">Participant 2 <Tag color="processing">running</Tag></Menu.Item>
+        <Menu.Item key="1" onClick={() => setSession(1)}>Participant 1  <Tag color="success">completed</Tag></Menu.Item>
+        <Menu.Item key="2" onClick={() => setSession(2)}>Participant 2 <Tag color="success">completed</Tag></Menu.Item>
       </Menu>
 
       </Sider>
         <Layout>
           <Content className="content">
-            <DataView />
+            <DataView session={session} />
           </Content>
         </Layout>
       </Layout>

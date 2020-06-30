@@ -30,7 +30,7 @@ export default function DataControls (props) {
         </Form.Item>
       </Form>
 			<div className="data-controls-buttons">
-				<Button icon={<ExportOutlined />} onClick={props.clear}></Button>
+				<Button icon={<ExportOutlined />} onClick={props.exportAll}></Button>
 				<Button icon={<DeleteOutlined />} onClick={props.clear}></Button>
 			</div>
 			</div>

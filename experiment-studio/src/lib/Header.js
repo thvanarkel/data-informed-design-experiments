@@ -66,6 +66,7 @@ export default function Header(props) {
       <Menu.Item key="sofa">sofa</Menu.Item>
       <Menu.Item key="bath">bath</Menu.Item>
       <Menu.Item key="remote">remote</Menu.Item>
+      <Menu.Item key="yogamat">yogamat</Menu.Item>
     </Menu>
   );
 
@@ -88,7 +89,7 @@ export default function Header(props) {
         <Row gutter={16}>
           <Col span={24}>
           <Breadcrumb style={{ marginBottom: 10 }}>
-            <Breadcrumb.Item>Participant 1</Breadcrumb.Item>
+            <Breadcrumb.Item>Participant {props.session}</Breadcrumb.Item>
             <Breadcrumb.Item overlay={thingMenu}>{thing == null ? "thing" : thing}</Breadcrumb.Item>
             {thing != null &&
               <Breadcrumb.Item overlay={streamMenu}>{stream == null ? "stream" : stream}</Breadcrumb.Item>

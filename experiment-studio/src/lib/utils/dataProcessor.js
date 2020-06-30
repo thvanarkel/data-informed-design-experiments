@@ -3,7 +3,7 @@ import moment from 'moment';
 
 querier.config(process.env.REACT_APP_URL, process.env.REACT_APP_TOKEN, process.env.REACT_APP_ORG);
 
-const bucket = "session01"
+var bucket = "session0"
 
 const queryData = async (thing, start, stop, measurement, window, fn) => {
   let q = `from(bucket: "${bucket}") |> range(start: ${start}, stop: ${stop}) |> filter(fn: (r) => r["thing"] == "${thing}") |> filter(fn: (r) => r["_measurement"] == "${measurement}")`;
@@ -30,7 +30,9 @@ let window;
 let fn;
 
 export default {
-  fetch: async (thing, stream, window, fn, dateRange, timeRange, processData, setLoading, setUptime) => {
+  fetch: async (session, thing, stream, window, fn, dateRange, timeRange, processData, setLoading, setUptime) => {
+    bucket = "session0";
+    bucket += session;
     setLoading(true);
     loading = false;
 
@@ -54,8 +56,10 @@ export default {
     const polling = 500
 
     while (dStart.isBefore(endRange)) {
-      console.log(`${dStart}, ${dEnd}`)
+      // console.log(`${dStart}, ${dEnd}`)
       const data = await queryData(thing, dStart.format(), dEnd.format(), stream, window, fn);
+      console.log(data)
+
 
       let t = 0;
       let o = 0;
@@ -79,9 +83,12 @@ export default {
       dStart.add(24, 'hours')
       dEnd.add(24, 'hours')
 
-      data[0].window = window;
-      data[0].fn = fn;
-      processData(data);
+      if (data.length > 0) {
+        data[0].window = window;
+        data[0].fn = fn;
+        data[0].session = session;
+        processData(data);
+      }
     }
     setLoading(false);
     setUptime(Math.round((100 - ((off/total) * 100)) * 10)/10)
