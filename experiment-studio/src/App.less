@@ -1,0 +1,190 @@
+@import '~antd/dist/antd.less';
+
+// Color scheme
+@white:           #FFFFFF;
+@dark:            #00004C;
+@grey-1:          #F3F3F6;
+@grey-2:          #E2E2E9;
+@grey-3:          #C9C9D4;
+@grey-4:          #B5B5BF;
+@grey-5:          #797986;
+@grey-6:          #4C4C57;
+
+@purple:          #715CF9;
+@purple-light:    #F0F0FE;
+@blue:            #23B2FE;
+@blue-light:      #E9F7FE;
+@green:           #00D692;
+@green-light:     #E9FBF4;
+@yellow:          #FEBC2D;
+@yellow-light:    #FFF8EC;
+@red:             #E4525A;
+@red-light:       #FCEEEF;
+@magenta:         #DD0C75;
+@magenta-light:   #FBE8F1;
+@peach:           #FF6577;
+@peach-light:     #FFF0F2;
+@mauve:           #B56EF5;
+@mauve-light:     #F3E6FD;
+
+
+.App {
+  // text-align: center;
+}
+
+// .App-logo {
+//   height: 40vmin;
+//   pointer-events: none;
+// }
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+// .App-header {
+//   background-color: #282c34;
+//   min-height: 100vh;
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   justify-content: center;
+//   font-size: calc(10px + 2vmin);
+//   color: white;
+// }
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sider {
+  -webkit-app-region: drag;
+  position: sticky;
+  top: 0;
+  text-align: center;
+  height: 100vh;
+}
+
+.content {
+  padding: 20px;
+}
+
+.menu {
+  margin-top: 25px;
+}
+
+.data-controls-menu {
+  display: flex;
+  justify-content: space-between;
+  .data-controls-buttons *:not(:last-child) {
+    margin-right: 10px;
+  }
+}
+
+.data-card {
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background-color: @grey-1;
+  color: @dark;
+  overflow: hidden;
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+  }
+  .ant-card-body {
+    padding: 0;
+  }
+  .graph {
+    line-height: normal;
+  }
+
+  svg {
+    .line rect {
+      fill: @dark;
+      stroke: @dark;
+      stroke-width: 1;
+    }
+  }
+  &.purple {
+    .color-scheme(@purple, @purple-light)
+  }
+  &.blue {
+    .color-scheme(@blue, @blue-light)
+  }
+  &.green {
+    .color-scheme(@green, @green-light)
+  }
+  &.yellow {
+    .color-scheme(@yellow, @yellow-light)
+  }
+  &.red {
+    .color-scheme(@red, @red-light);
+  }
+  &.magenta {
+    .color-scheme(@magenta, @magenta-light);
+  }
+  &.peach {
+    .color-scheme(@peach, @peach-light);
+  }
+  &.mauve {
+    .color-scheme(@mauve, @mauve-light);
+  }
+}
+
+.color-scheme(@color, @color-light) {
+  background-color: @color-light;
+  color: @color;
+  svg {
+    .line, rect, path {
+      fill: @color;
+      stroke: @color;
+    }
+  }
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  .message {
+    padding: 10px;
+    margin: 10px;
+    background-color: @dark;
+    color: @white;
+    border-radius: 10px;
+    width: auto;
+    max-width: 350px;
+
+    &.bot {
+      background-color: @grey-6;
+    }
+    &.user {
+      align-self: flex-end;
+    }
+
+    &:nth-child(3n) {
+      page-break-after: always; /* CSS 2.1 syntax */
+      break-after: always; /* New syntax */
+    }
+    .message-text {
+      margin: 0;
+    }
+
+    .message-time {
+      font-size: 10px;
+      margin-bottom: 0px;
+      width: 100%;
+      text-align: right;
+      margin-top: 2px;
+    }
+  }
+}
