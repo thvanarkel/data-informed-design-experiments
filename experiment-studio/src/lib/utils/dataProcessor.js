@@ -6,9 +6,10 @@ querier.config(process.env.REACT_APP_URL, process.env.REACT_APP_TOKEN, process.e
 var bucket = "session0"
 
 const queryData = async (thing, start, stop, measurement, window, fn) => {
-  let q = `from(bucket: "${bucket}") |> range(start: ${start}, stop: ${stop}) |> filter(fn: (r) => r["thing"] == "${thing}") |> filter(fn: (r) => r["_measurement"] == "${measurement}")`;
+  let q = `from(bucket: "${bucket}") |> range(start: ${start}, stop: ${stop}) |> filter(fn: (r) => r["thing"] == "${thing}")`;
+  q += measurement !== "all" ? ` |> filter(fn: (r) => r["_measurement"] == "${measurement}")` : '';
+
   console.log(window);
-  console.log(`window: ${window} fn: ${fn}`)
   if (window.length > 0 && fn.length > 0) {
     q +=  `|> aggregateWindow(every: ${window}, fn: ${fn})`;
 
@@ -65,17 +66,24 @@ export default {
       let o = 0;
       let last = dStart.valueOf();
 
-      for (var i of data) {
-        const ti = i._time.getTime();
+      for (const [i, value] of data.entries()) {
+        const ti = value._time.getTime();
         const d = ti - last;
         // console.log(d);
-        if (d > 45000) { // If the difference  is time is larger than a minute then we missed too much data
+        if (d > 0 * 60000 + 45000) { // If the difference  is time is larger than a minute then we missed too much data
           o += (d - polling);
         }
         t += d;
         last = ti;
+        if (i == data.length - 1) {
+          off += dEnd.valueOf() - ti;
+        }
       }
-      total += t;
+      if (data.length == 0) {
+        off += dEnd.valueOf() - dStart.valueOf();
+      }
+      //total += t;
+      total += dEnd.valueOf() - dStart.valueOf();
       off += o;
 
       console.log(total)

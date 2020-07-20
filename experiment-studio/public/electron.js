@@ -2,8 +2,12 @@ const electron = require('electron');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
+const { ipcMain } = require('electron')
+
 const path = require('path');
 const isDev = require('electron-is-dev');
+
+const fs = require('fs');
 
 let mainWindow;
 
@@ -23,7 +27,18 @@ function createWindow() {
   //   mainWindow.webContents.openDevTools();
   // }
   mainWindow.on('closed', () => mainWindow = null);
+
 }
+
+// retransmit it to workerWindow
+ipcMain.on("printPDF", () => {
+    mainWindow.webContents.printToPDF({}).then(data => {
+      fs.writeFile('/Users/Thomas/test.pdf', data, (error) => {
+      if (error) throw error
+      console.log('Write PDF successfully.')
+    })
+    });
+});
 
 app.on('ready', createWindow);
 

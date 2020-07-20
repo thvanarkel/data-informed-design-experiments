@@ -151,3 +151,40 @@
     }
   }
 }
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  .message {
+    padding: 10px;
+    margin: 10px;
+    background-color: @dark;
+    color: @white;
+    border-radius: 10px;
+    width: auto;
+    max-width: 350px;
+
+    &.bot {
+      background-color: @grey-6;
+    }
+    &.user {
+      align-self: flex-end;
+    }
+
+    &:nth-child(3n) {
+      page-break-after: always; /* CSS 2.1 syntax */
+      break-after: always; /* New syntax */
+    }
+    .message-text {
+      margin: 0;
+    }
+
+    .message-time {
+      font-size: 10px;
+      margin-bottom: 0px;
+      width: 100%;
+      text-align: right;
+      margin-top: 2px;
+    }
+  }
+}

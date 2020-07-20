@@ -49,10 +49,6 @@ export default function Header(props) {
 
   const [uptime, setUptime] = React.useState(null);
 
-
-
-
-
   React.useEffect(() => {
     if (dateRange.filter(d => d == null).length <= 0 && timeRange.filter(t => t == null).length <= 0 && thing != null) {
       setValidated(true);
@@ -67,6 +63,8 @@ export default function Header(props) {
       <Menu.Item key="bath">bath</Menu.Item>
       <Menu.Item key="remote">remote</Menu.Item>
       <Menu.Item key="yogamat">yogamat</Menu.Item>
+      <Menu.Item key="lamp">lamp</Menu.Item>
+      <Menu.Item key="chatbot">chatbot</Menu.Item>
     </Menu>
   );
 
@@ -79,6 +77,7 @@ export default function Header(props) {
       <Menu.Item key="distance">distance</Menu.Item>
       <Menu.Item key="temperature">temperature</Menu.Item>
       <Menu.Item key="acceleration">acceleration</Menu.Item>
+      <Menu.Item key="all">all</Menu.Item>
     </Menu>
   );
 
@@ -97,22 +96,24 @@ export default function Header(props) {
           </Breadcrumb>
           </Col>
           <Col span={26}>
-            <Form layout="inline">
+            <Form layout="inline" style={{}}>
               <Form.Item label="Date range">
                 <DateRangePicker onChange={(d) => setDateRange(d)} />
               </Form.Item>
               <Form.Item label="Segment of day">
                 <TimeRangePicker format={format} order={false} onChange={(t) => setTimeRange(t)} />
               </Form.Item>
-              <Form.Item>
-              <Input.Group compact>
+              <Form.Item style={{marginTop:"0px"}}>
+                <Button disabled={!validated} onClick={() => props.fetch(thing, stream, window, fn, dateRange, timeRange)} loading={props.loading}>Fetch</Button>
+              </Form.Item>
+              <Form.Item  label="Window" style={{marginTop:"10px"}}>
+
+              <Input.Group compact style={{marginLeft:"19px"}}>
                 <Input style={{ width: '25%' }} placeholder="window" onChange={(v) => setWindow(v.target.value)} />
                 <Input style={{ width: '30%' }} placeholder="function" onChange={(v) => setFn(v.target.value)} />
               </Input.Group>
               </Form.Item>
-              <Form.Item>
-                <Button disabled={!validated} onClick={() => props.fetch(thing, stream, window, fn, dateRange, timeRange)} loading={props.loading}>Fetch</Button>
-              </Form.Item>
+
             </Form>
           </Col>
         </Row>

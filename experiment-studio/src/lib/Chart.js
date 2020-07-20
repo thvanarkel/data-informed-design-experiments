@@ -25,6 +25,7 @@ class Chart extends Component {
 
 	parseData(d) {
 		for (const e of d) {
+			e._original = e._time
 			e._time = new Date(e._time)
 		}
 		return d;
@@ -48,7 +49,7 @@ class Chart extends Component {
 			return;
 		}
 		this.state.data = this.props.data;
-		this.update();
+		// this.update();
 	}
 
 	drawChart() {
@@ -173,8 +174,8 @@ class LineChart extends Chart {
 				if (this.props.discrete) return (d._value < (0.25 * this.max) || d._value < 0.01) ? this.yScale(0) : this.yScale(1);
 				return this.yScale(d._value)
 			}).bind(this)) // set the y values for the line generator
-			//.curve(d3.curveBasis) // apply smoothing to the line
-			.curve(d3.curveLinear)
+			.curve(d3.curveBasis) // apply smoothing to the line
+			// .curve(d3.curveLinear)
 
 		// Name the SVG
 		this.svg.attr('class', 'line-chart')
@@ -388,7 +389,7 @@ class AccelChart extends Chart {
 
 }
 
-export { LineChart, BlockChart, AccelChart };
+export { Chart, LineChart, BlockChart, AccelChart };
 
 
 

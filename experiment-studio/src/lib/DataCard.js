@@ -4,6 +4,9 @@ import { AccelChart, LineChart, BlockChart } from './Chart';
 import moment from 'moment';
 import { DeleteOutlined, MoreOutlined, LoadingOutlined } from '@ant-design/icons';
 
+import { LampChart } from './LampChart'
+import { BotChart } from './BotChart'
+
 // const closeIcon = <CloseOutlined style={{ fontSize: 12 }} />;
 
 export default function DataCard(props) {
@@ -83,7 +86,7 @@ export default function DataCard(props) {
         setConfig({
           color: "",
           height: 100,
-          yAxis: false,
+          yAxis: true,
           gradient: {min: 1.0, max: 1.0},
           fixedHeight: false,
           discrete: false
@@ -92,7 +95,7 @@ export default function DataCard(props) {
       default:
         setConfig({
           color: "",
-          height: 100,
+          height: 200,
           yAxis: false,
           gradient: {min: 1.0, max: 1.0},
           fixedHeight: false,
@@ -148,11 +151,10 @@ export default function DataCard(props) {
   return(
     <Spin indicator={loadIcon} spinning={false}>
       <Card className={"data-card " + (config.color !== undefined ? config.color : "")}>
-        <div className="card-header"><p>{getDate() + getWindow()}</p>{dropdown}</div>
+        <div className="card-header"><p>{getDate()}</p>{dropdown}</div>
         { !isNaN(props.width) &&
-          <BlockChart ref={chartRef}
+          <LineChart ref={chartRef}
                       data={props.data}
-                      window={getWindow()}
                       measurement={measurement}
                       thing={thing}
                       yAxis={config.yAxis}
@@ -160,7 +162,7 @@ export default function DataCard(props) {
                       index={props.index}
                       width={props.width}
                       discrete={config.discrete}
-                      height={config.height !== undefined ? config.height : 75}
+                      height={config.height !== undefined ? config.height : 250}
                       gradient={config.gradient}
                       fixedHeight={config.fixedHeight}
                    />

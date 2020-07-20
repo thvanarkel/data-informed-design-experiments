@@ -60,7 +60,7 @@ export default function App() {
       <Sider className="sider" width="300" theme="light">Experiment
       <Menu className="menu" defaultSelectedKeys={['1']} mode="inline">
         <Menu.Item key="1" onClick={() => setSession(1)}>Participant 1  <Tag color="success">completed</Tag></Menu.Item>
-        <Menu.Item key="2" onClick={() => setSession(2)}>Participant 2 <Tag color="success">completed</Tag></Menu.Item>
+        <Menu.Item key="2" onClick={() => setSession(2)}>Participant 2 <Tag color="blue">running</Tag></Menu.Item>
       </Menu>
 
       </Sider>

@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './Header'
 import DataCard from './DataCard'
+import OverviewCard from './OverviewCard'
 import DataControls from './DataControls'
 import {
 	Divider,
@@ -50,7 +51,7 @@ export default function DataView(props) {
 
   const fetch = (thing, stream, window, fn, dateRange, timeRange) => {
     console.log("fetch")
-    // setData({type: "clear"})
+    setData({type: "clear"})
     dataProcessor.fetch(props.session, thing, stream, window, fn, dateRange, timeRange, processData, setLoading, setUptime)
   }
 
@@ -86,16 +87,31 @@ export default function DataView(props) {
 		console.log(`min: ${range.min} max: ${range.max}`)
   }, [transformRange]);
 
+	const ipcRenderer = require("electron").ipcRenderer;
+
+	const print = () => {
+		ipcRenderer.send("printPDF");
+	}
+
+	const overview = true;
+	const datacards = true;
+
   return (
     <div ref={ref}>
       <Header loading={loading} uptime={uptime} fetch={fetch} session={props.session} />
-			<DataControls range={range} updateRange={setTransformRange} clear={clear}/>
-      {data.map((d,i) => {
-        return (
+			<DataControls range={range} updateRange={setTransformRange} clear={clear} print={print}/>
+			{ overview && <OverviewCard width={dimensions.width} height={600} /> }
+			{ datacards && data.map((d,i) => {
+				return (
 					<DataCard key={i} data={d} index={i} width={dimensions.width} range={transformRange} onRemove={removeCard} />
 				)
-      })}
-
+			})}
     </div>
   )
 }
+
+// {data.map((d,i) => {
+// 	return (
+// 		<DataCard key={i} data={d} index={i} width={dimensions.width} range={transformRange} onRemove={removeCard} />
+// 	)
+// })}
